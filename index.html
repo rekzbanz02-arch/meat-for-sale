@@ -163,6 +163,8 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
 .pinicon{background:none;border:0}
 .leaflet-tooltip.pintip{background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:4px;font:600 12px/1.2 "Poppins",system-ui,sans-serif;padding:2px 6px;box-shadow:none}
 .leaflet-tooltip-top.pintip:before{border-top-color:var(--ink)}
+#adminRows .item{flex-wrap:wrap}
+#adminRows .item .n{flex:1 1 140px}
 .pop b{display:block}
 .pop a{font-weight:600;color:var(--meat-d)}
 </style>
@@ -351,7 +353,7 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
 
 <div class="modal" id="editModal">
   <div class="panel">
-    <h2>I-edit ang order</h2>
+    <h2 id="editTitle">I-edit ang order</h2>
     <label for="eKilo">Kilo</label>
     <input id="eKilo" type="text" inputmode="decimal" autocomplete="off" maxlength="6">
     <label for="ePart">Parte sa baboy</label>
@@ -372,7 +374,7 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
 
 <div class="modal mapmodal" id="mapModal" role="dialog" aria-label="Mapa">
   <div class="mapbox">
-    <div class="maphead"><span>I-pin ang imong location</span><button type="button" class="chatx" id="mapX" aria-label="Isira ang mapa">✕</button></div>
+    <div class="maphead"><span id="mapTitle">I-pin ang imong location</span><button type="button" class="chatx" id="mapX" aria-label="Isira ang mapa">✕</button></div>
     <div id="pickMap"></div>
     <p class="mapmsg" id="mapMsg"></p>
     <div class="maprow">
@@ -691,6 +693,7 @@ function renderAdmin() {
     ? rows.map(o => '<div class="item"><span class="n">' + esc(o.name) + meta(o, peso(o.kilo * partPrice(o.part))) + '</span>' +
         '<span class="k">' + kg(o.kilo) + ' kg</span>' +
         (hasPin(o) ? '<button type="button" class="ghost sm pinb" data-loc="' + esc(o.id) + '" aria-label="Tan-awa sa mapa si ' + esc(o.name) + '">' + PIN_SVG + '</button>' : '') +
+        '<button type="button" class="ghost sm" data-aedit="' + esc(o.id) + '" aria-label="I-edit ang order ni ' + esc(o.name) + '">Edit</button>' +
         '<label class="chk"><input type="checkbox" data-id="' + esc(o.id) + '"' + (o.delivered ? ' checked' : '') + '> Delivery</label>' +
         '<button class="danger" data-del="' + esc(o.id) + '" aria-label="Papasa ' + esc(o.name) + '">✕</button></div>').join('') +
       '<div class="sum"><span>Total: ' + kg(total) + ' kg</span><span>' + peso(totalAmt) + '</span></div>' + partSummary(rows)
@@ -965,6 +968,20 @@ function pinIcon(color) {
   });
 }
 
+// base layers: normal street map + "Earth view" (satellite imagery with place labels); the choice is remembered
+const EARTH = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const EARTH_LABELS = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+function addBases(map) {
+  const street = L.tileLayer(TILES, TILE_OPT);
+  const earth = L.layerGroup([
+    L.tileLayer(EARTH, { maxZoom: 19, maxNativeZoom: 18, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }),
+    L.tileLayer(EARTH_LABELS, { maxZoom: 19, maxNativeZoom: 18 })
+  ]);
+  (lsGet('ihawon_map_base') === 'earth' ? earth : street).addTo(map);
+  L.control.layers({ 'Mapa': street, 'Earth view': earth }, null, { position: 'topright' }).addTo(map);
+  map.on('baselayerchange', e => lsSet('ihawon_map_base', e.name === 'Earth view' ? 'earth' : 'street'));
+}
+
 // picker: opens the map, the customer taps/drags a pin, then cb(pos) gets {lat,lng} (or null if cleared)
 let pickMap = null, pickMarker = null, pickCb = null, pickPos = null, pickCleared = false;
 function mapNote(t, err) { const m = $('mapMsg'); m.textContent = t; m.style.color = err ? 'var(--err)' : ''; }
@@ -985,8 +1002,9 @@ function placePick(ll, zoom) {
   if (zoom) pickMap.setView([pickPos.lat, pickPos.lng], zoom);
   mapNote('Naka-pin na. I-drag ang pin kung dili sakto, dayon i-press ang Save pin.');
 }
-function openMap(initial, cb) {
+function openMap(initial, cb, title) {
   if (!hasLeaflet()) { alert('Wala ma-load ang mapa. Check ang internet ug i-refresh ang page.'); return; }
+  $('mapTitle').textContent = title || 'I-pin ang imong location';
   pickCb = cb;
   pickPos = hasPin(initial) ? { lat: initial.lat, lng: initial.lng } : null;
   pickCleared = false;
@@ -994,7 +1012,7 @@ function openMap(initial, cb) {
   document.body.style.overflow = 'hidden';
   if (!pickMap) {
     pickMap = L.map('pickMap');
-    L.tileLayer(TILES, TILE_OPT).addTo(pickMap);
+    addBases(pickMap);
     pickMap.on('click', e => placePick(e.latlng));
   }
   pickMap.invalidateSize();
@@ -1056,15 +1074,22 @@ $('mineRows').addEventListener('click', e => {
   const b = e.target.closest('[data-edit]');
   if (b) openEdit(b.dataset.edit);
 });
-let editId = null, editPin = null;
+let editId = null, editPin = null, editAdmin = false;
 function updateEditPinUi() {
   $('ePin').innerHTML = PIN_SVG + '<span>' + (editPin ? 'Usbon ang pin sa location' : 'I-pin ang location') + '</span>';
   $('ePinInfo').textContent = editPin ? 'Naay pin na. Ikaw ra ug ang admin ang makakita.' : 'Wala pay pin.';
 }
-function openEdit(id) {
+// admin can edit any order (old ones too, delivered or not); customers only their own, undelivered
+function openEdit(id, admin) {
   const o = data.orders.find(x => x.id === id);
-  if (!o || !o.cid || o.cid !== myCid) return;
-  if (o.delivered) { alert('Na-deliver na ang order, dili na ma-edit.'); return; }
+  if (!o) return;
+  if (admin) { if (!isAdmin) return; }
+  else {
+    if (!o.cid || o.cid !== myCid) return;
+    if (o.delivered) { alert('Na-deliver na ang order, dili na ma-edit.'); return; }
+  }
+  editAdmin = !!admin;
+  $('editTitle').textContent = admin ? 'I-edit ang order (Admin)' : 'I-edit ang order';
   editId = id;
   editPin = hasPin(o) ? { lat: o.lat, lng: o.lng } : null;
   $('eKilo').value = o.kilo;
@@ -1079,7 +1104,7 @@ function openEdit(id) {
   $('editModal').classList.add('on');
 }
 function closeEdit() { $('editModal').classList.remove('on'); editId = null; }
-$('ePin').onclick = () => openMap(editPin, p => { editPin = p; updateEditPinUi(); });
+$('ePin').onclick = () => openMap(editPin, p => { editPin = p; updateEditPinUi(); }, editAdmin ? 'I-pin ang location sa customer' : '');
 $('eCancel').onclick = closeEdit;
 $('eSave').onclick = async () => {
   const msg = $('eMsg'), btn = $('eSave');
@@ -1088,13 +1113,16 @@ $('eSave').onclick = async () => {
   if (!(k > 0)) { msg.textContent = 'Ibutang kung pila ka kilo.'; return; }
   if (!name) { msg.textContent = 'Ibutang ang imong ngalan.'; return; }
   if (!part) { msg.textContent = 'Asa nga parte sa baboy.'; return; }
-  const id = editId, pin = editPin;
+  const id = editId, pin = editPin, asAdmin = editAdmin && isAdmin;
   btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Gi-save…';
   try {
     await mutate(() => {
       const o = data.orders.find(x => x.id === id);
-      if (!o || !o.cid || o.cid !== myCid) throw new Error('Dili nimo kini order.');
-      if (o.delivered) throw new Error('Na-deliver na ang order, dili na ma-edit.');
+      if (!o) throw new Error('Wala na ang order.');
+      if (!asAdmin) {
+        if (!o.cid || o.cid !== myCid) throw new Error('Dili nimo kini order.');
+        if (o.delivered) throw new Error('Na-deliver na ang order, dili na ma-edit.');
+      }
       Object.assign(o, { name, part, note, kilo: k, edited: Date.now() });
       if (pin) { o.lat = pin.lat; o.lng = pin.lng; } else { delete o.lat; delete o.lng; }
     });
@@ -1120,7 +1148,7 @@ function renderAdminMap() {
   if (!hasLeaflet()) { el.classList.add('hide'); info.textContent = 'Wala ma-load ang mapa. Check ang internet ug i-refresh.'; return; }
   if (!adminMap) {
     adminMap = L.map('adminMap').setView(MAP_HOME, 13);
-    L.tileLayer(TILES, TILE_OPT).addTo(adminMap);
+    addBases(adminMap);
     adminLayer = L.layerGroup().addTo(adminMap);
   }
   adminMap.invalidateSize();
@@ -1147,6 +1175,10 @@ function renderAdminMap() {
   else if (list.length === 1) adminMap.setView([list[0].lat, list[0].lng], 16);
   else adminMap.fitBounds(L.latLngBounds(list.map(o => [o.lat, o.lng])), { padding: [40, 40], maxZoom: 17 });
 }
+$('adminRows').addEventListener('click', e => {
+  const a = e.target.closest('[data-aedit]');
+  if (a) openEdit(a.dataset.aedit, true);
+});
 $('adminRows').addEventListener('click', e => {
   const b = e.target.closest('[data-loc]');
   if (!b || !adminMap) return;
