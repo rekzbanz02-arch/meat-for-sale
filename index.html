@@ -105,6 +105,7 @@ button.danger{background:transparent;color:var(--err);border-color:transparent;p
 .item .n{flex:1;min-width:0;overflow-wrap:anywhere}
 .item .k{font-weight:700;white-space:nowrap}
 .tag{font-size:13px;font-weight:700;color:var(--ok);white-space:nowrap}
+.tags{display:flex;flex-direction:column;align-items:flex-end;line-height:1.3}
 .sum{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid var(--ink);font-weight:700}
 .empty{color:var(--muted);margin:4px 0}
 .chk{display:flex;align-items:center;gap:6px;font-weight:600;margin:0;white-space:nowrap;cursor:pointer}
@@ -166,14 +167,19 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
 /* compact admin list + 3-dot menu */
 #adminRows .item{gap:6px;padding:4px 0;font-size:14px;line-height:1.35;position:relative}
 #adminRows .meta{font-size:12px}
-#adminRows .chk{gap:0}
-#adminRows .chk input{width:20px;height:20px}
+.flags{display:block;line-height:1}
+.fl{display:inline-block;margin:3px 4px 0 0;padding:2px 8px;border-radius:9px;font-size:11px;font-weight:700;line-height:1.3;color:#fff;white-space:nowrap}
+.fl.d{background:var(--meat)}
+.fl.p{background:#b26a00}
 button.pinb{padding:3px 5px}
 button.kebab{background:transparent;color:var(--ink);border:0;padding:3px 4px;display:flex;align-items:center}
 button.kebab:hover{background:var(--kraft)}
-.kmenu{position:absolute;right:0;top:100%;z-index:6;min-width:130px;background:#fff;border:2px solid var(--ink);border-radius:5px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+.kmenu{position:absolute;right:0;top:100%;z-index:6;min-width:160px;background:#fff;border:2px solid var(--ink);border-radius:5px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,.25)}
 .kmenu button{display:block;width:100%;text-align:left;background:#fff;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:9px 12px;font-weight:600}
 .kmenu button:last-child{border-bottom:0}
+.kmenu .kchk{display:flex;align-items:center;gap:10px;margin:0;padding:9px 12px;background:#fff;border-bottom:1px solid var(--line);font-size:15px;font-weight:600;line-height:1.55;cursor:pointer}
+.kmenu .kchk:hover{background:var(--kraft)}
+.kmenu .kchk input{flex:0 0 auto;width:20px;height:20px;padding:0;accent-color:var(--ok)}
 .kmenu button:hover{background:var(--kraft)}
 .kmenu button.del,.kmenu button.del:hover{color:var(--err)}
 .ptools{display:flex;gap:8px;margin:2px 0 8px}
@@ -310,11 +316,13 @@ button.ownbtn:hover{background:var(--kraft)}
           <option value="all">I-print: Tanan</option>
           <option value="pending">I-print: Wala pa na-deliver</option>
           <option value="done">I-print: Na-deliver na</option>
+          <option value="unpaid">I-print: Wala pa bayad</option>
+          <option value="paid">I-print: Bayad na</option>
         </select>
         <button type="button" class="ghost" id="printBtn">Print</button>
       </div>
       <div id="adminRows"></div>
-      <p class="hint">Check box = na-deliver na. ⋮ = Edit / Delete.</p>
+      <p class="hint">⋮ = Delivered, Paid, Edit, Delete.</p>
     </div>
 
     <div class="panel">
@@ -739,13 +747,18 @@ function meta(o, extra) {
   if (o.note) h += (h ? '<span class="note">' : '<span>') + esc(o.note) + '</span>';
   return h ? '<span class="meta">' + h + '</span>' : '';
 }
+// status tags shown to customers: delivered / paid (nothing when neither)
+function statusTags(o) {
+  if (!o.delivered && !o.paid) return '';
+  return '<span class="tags">' + (o.delivered ? '<span class="tag">Na-deliver na</span>' : '') + (o.paid ? '<span class="tag">Bayad na</span>' : '') + '</span>';
+}
 function renderPublic() {
   const box = $('publicList');
   box.classList.toggle('hide', !data.settings.showList);
   const rows = data.orders;
   $('publicRows').innerHTML = rows.length
     ? rows.map(o => '<div class="item"><span class="n">' + esc(o.name) + meta(o) + '</span>' +
-        (o.delivered ? '<span class="tag">Na-deliver na</span>' : '') +
+        statusTags(o) +
         '<span class="k">' + kg(o.kilo) + ' kg</span></div>').join('')
     : '<p class="empty">Wala pay nag-order.</p>';
 }
@@ -759,7 +772,7 @@ async function submitOrder() {
   try {
     const pin = formPin;
     await mutate(() => {
-      const o = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cid: myCid, name, part, note, kilo: k, delivered: false, ts: Date.now() };
+      const o = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cid: myCid, name, part, note, kilo: k, delivered: false, paid: false, ts: Date.now() };
       if (pin) { o.lat = pin.lat; o.lng = pin.lng; }
       data.orders.push(o);
     });
@@ -805,18 +818,27 @@ function partSummary(rows) {
 }
 let menuId = null; // which order's 3-dot menu is open
 const KEBAB_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+// small status chips on the admin row, since the checkboxes now live inside the 3-dot menu
+function adminFlags(o) {
+  if (!o.delivered && !o.paid) return '';
+  return '<span class="flags">' + (o.delivered ? '<b class="fl d">Delivered</b>' : '') + (o.paid ? '<b class="fl p">Paid</b>' : '') + '</span>';
+}
 function renderAdmin() {
   const rows = data.orders;
   const total = rows.reduce((a, o) => a + Number(o.kilo || 0), 0);
   const totalAmt = rows.reduce((a, o) => a + Number(o.kilo || 0) * partPrice(o.part), 0);
   $('adminRows').innerHTML = rows.length
-    ? rows.map(o => '<div class="item"><span class="n">' + esc(o.name) + meta(o, peso(o.kilo * partPrice(o.part))) + '</span>' +
+    ? rows.map(o => '<div class="item"><span class="n">' + esc(o.name) + meta(o, peso(o.kilo * partPrice(o.part))) + adminFlags(o) + '</span>' +
         '<span class="k">' + kg(o.kilo) + ' kg</span>' +
         (hasPin(o) ? '<button type="button" class="ghost sm pinb" data-loc="' + esc(o.id) + '" aria-label="Tan-awa sa mapa si ' + esc(o.name) + '">' + PIN_SVG + '</button>' : '') +
-        '<label class="chk" title="Na-deliver na"><input type="checkbox" data-id="' + esc(o.id) + '"' + (o.delivered ? ' checked' : '') + ' aria-label="Na-deliver na si ' + esc(o.name) + '"></label>' +
         '<button type="button" class="kebab" data-menu="' + esc(o.id) + '" aria-label="Mga opsyon para ni ' + esc(o.name) + '" aria-haspopup="true">' + KEBAB_SVG + '</button>' +
         (o.id === menuId
-          ? '<div class="kmenu" role="menu"><button type="button" role="menuitem" data-aedit="' + esc(o.id) + '">Edit</button><button type="button" role="menuitem" class="del" data-del="' + esc(o.id) + '">Delete</button></div>'
+          ? '<div class="kmenu" role="menu">' +
+              '<label class="kchk"><input type="checkbox" role="menuitemcheckbox" data-id="' + esc(o.id) + '" data-f="delivered"' + (o.delivered ? ' checked' : '') + ' aria-checked="' + (o.delivered ? 'true' : 'false') + '">Delivered</label>' +
+              '<label class="kchk"><input type="checkbox" role="menuitemcheckbox" data-id="' + esc(o.id) + '" data-f="paid"' + (o.paid ? ' checked' : '') + ' aria-checked="' + (o.paid ? 'true' : 'false') + '">Paid</label>' +
+              '<button type="button" role="menuitem" data-aedit="' + esc(o.id) + '">Edit</button>' +
+              '<button type="button" role="menuitem" class="del" data-del="' + esc(o.id) + '">Delete</button>' +
+            '</div>'
           : '') +
         '</div>').join('') +
       '<div class="sum"><span>Total: ' + kg(total) + ' kg</span><span>' + peso(totalAmt) + '</span></div>' + partSummary(rows)
@@ -845,9 +867,10 @@ async function saveSettings() {
   btn.disabled = false;
 }
 $('adminRows').addEventListener('change', async e => {
-  const id = e.target.dataset.id; if (!id) return;
+  const id = e.target.dataset.id, f = e.target.dataset.f;
+  if (!id || (f !== 'delivered' && f !== 'paid')) return;
   const val = e.target.checked;
-  try { await mutate(() => { const o = data.orders.find(x => x.id === id); if (o) o.delivered = val; }); }
+  try { await mutate(() => { const o = data.orders.find(x => x.id === id); if (o) o[f] = val; }); }
   catch (err) { e.target.checked = !val; alert('Wala na-save. ' + err.message); }
   renderAll();
 });
@@ -1192,9 +1215,8 @@ function renderMine() {
   $('mineRows').innerHTML = rows.map(o =>
     '<div class="item"><span class="n">' + esc(o.name) + meta(o, hasPin(o) ? 'naay pin' : '') + '</span>' +
     '<span class="k">' + kg(o.kilo) + ' kg</span>' +
-    (o.delivered
-      ? '<span class="tag">Na-deliver na</span>'
-      : '<button type="button" class="ghost sm" data-edit="' + esc(o.id) + '">Edit</button>') +
+    statusTags(o) +
+    (o.delivered ? '' : '<button type="button" class="ghost sm" data-edit="' + esc(o.id) + '">Edit</button>') +
     '</div>').join('');
 }
 $('mineRows').addEventListener('click', e => {
@@ -1284,7 +1306,7 @@ function renderAdminMap() {
   adminMap.invalidateSize();
   const list = data.orders.filter(hasPin);
   info.textContent = list.length ? list.length + ' ka customer ang naka-pin. I-tap ang pin para sa detalye ug direksyon.' : 'Wala pay customer nga nag-pin.';
-  const full = JSON.stringify(list.map(o => [o.id, o.lat, o.lng, o.name, o.part, o.kilo, o.note, !!o.delivered]));
+  const full = JSON.stringify(list.map(o => [o.id, o.lat, o.lng, o.name, o.part, o.kilo, o.note, !!o.delivered, !!o.paid]));
   if (full === adminFull) return; // nothing changed, so keep the map where the admin left it
   adminFull = full;
   adminLayer.clearLayers();
@@ -1293,7 +1315,7 @@ function renderAdminMap() {
     const m = L.marker([o.lat, o.lng], { icon: pinIcon(o.delivered ? '#6b7d70' : '#c62828') });
     m.bindTooltip(esc(o.name), { permanent: true, direction: 'top', className: 'pintip' });
     m.bindPopup('<div class="pop"><b>' + esc(o.name) + '</b>' + esc(o.part || '') + ' · ' + kg(o.kilo) + ' kg' +
-      (o.note ? '<br>' + esc(o.note) : '') + (o.delivered ? '<br>Na-deliver na' : '') +
+      (o.note ? '<br>' + esc(o.note) : '') + (o.delivered ? '<br>Na-deliver na' : '') + (o.paid ? '<br>Bayad na' : '') +
       '<br><a href="' + gmapsDir(o.lat, o.lng) + '" target="_blank" rel="noopener">Direksyon sa Google Maps</a></div>');
     m.addTo(adminLayer);
     adminMarkers[o.id] = m;
@@ -1325,9 +1347,9 @@ document.addEventListener('click', e => {
 /* ---------- admin: print orders ---------- */
 function printOrders() {
   const f = $('printFilter').value;
-  const rows = data.orders.filter(o => f === 'all' || (f === 'done' ? o.delivered : !o.delivered));
+  const rows = data.orders.filter(o => f === 'all' || (f === 'done' ? o.delivered : f === 'pending' ? !o.delivered : f === 'paid' ? o.paid : !o.paid));
   if (!rows.length) { alert('Walay order nga i-print sa gipili nga lista.'); return; }
-  const label = { all: 'Tanan nga order', pending: 'Wala pa na-deliver', done: 'Na-deliver na' }[f];
+  const label = { all: 'Tanan nga order', pending: 'Wala pa na-deliver', done: 'Na-deliver na', unpaid: 'Wala pa bayad', paid: 'Bayad na' }[f];
   const title = (data.settings.signText || DEFAULT_SIGN).replace(/\{price\}/g, price());
   const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
   let totK = 0, totA = 0;
@@ -1337,13 +1359,13 @@ function printOrders() {
     totK += k; totA += a;
     const g = parts[o.part || 'Walay parte'] || (parts[o.part || 'Walay parte'] = { k: 0, a: 0 });
     g.k += k; g.a += a;
-    return '<tr><td>' + (i + 1) + '</td><td>' + esc(o.name) + '</td><td>' + esc(o.part || '') + '</td><td class="num">' + kg(k) + '</td><td class="num">' + peso(pp) + '</td><td class="num">' + peso(a) + '</td><td>' + esc(o.note || '') + '</td><td>' + (o.delivered ? 'Na-deliver' : '&#9744;') + '</td></tr>';
+    return '<tr><td>' + (i + 1) + '</td><td>' + esc(o.name) + '</td><td>' + esc(o.part || '') + '</td><td class="num">' + kg(k) + '</td><td class="num">' + peso(pp) + '</td><td class="num">' + peso(a) + '</td><td>' + esc(o.note || '') + '</td><td>' + (o.delivered ? 'Na-deliver' : '&#9744;') + '</td><td>' + (o.paid ? 'Bayad na' : '&#9744;') + '</td></tr>';
   }).join('');
   const sum = Object.keys(parts).map(k => '<tr><td>' + esc(k) + '</td><td class="num">' + kg(parts[k].k) + ' kg</td><td class="num">' + peso(parts[k].a) + '</td></tr>').join('');
   $('printArea').innerHTML =
     '<h1>' + esc(title) + '</h1><p>' + esc(label) + ' &middot; ' + esc(today) + ' &middot; ' + rows.length + ' ka order</p>' +
-    '<table><thead><tr><th>#</th><th>Ngalan</th><th>Parte</th><th class="num">Kilo</th><th class="num">Presyo/kg</th><th class="num">Kantidad</th><th>Address/Notes</th><th>Deliver</th></tr></thead><tbody>' + body +
-    '</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">' + kg(totK) + '</td><td></td><td class="num">' + peso(totA) + '</td><td colspan="2"></td></tr></tfoot></table>' +
+    '<table><thead><tr><th>#</th><th>Ngalan</th><th>Parte</th><th class="num">Kilo</th><th class="num">Presyo/kg</th><th class="num">Kantidad</th><th>Address/Notes</th><th>Deliver</th><th>Bayad</th></tr></thead><tbody>' + body +
+    '</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">' + kg(totK) + '</td><td></td><td class="num">' + peso(totA) + '</td><td colspan="3"></td></tr></tfoot></table>' +
     '<h2>Kilo kada parte</h2><table><thead><tr><th>Parte</th><th class="num">Kilo</th><th class="num">Kantidad</th></tr></thead><tbody>' + sum + '</tbody></table>';
   setTimeout(() => window.print(), 60);
 }
