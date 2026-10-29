@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ihawon sa Oct 31</title>
+<title>Karne for sale</title>
 <meta name="theme-color" content="#1f7a3d">
-<meta name="description" content="Ihawon sa Oct 31 (Sabado), tag 280 ang kilo, cash. Kinsay magkuha?">
+<meta name="description" content="...">
 <!-- Link preview (Facebook, Messenger, Viber, etc.). Put your pig photo in the repo as pig.jpg (1200x630),
      then replace YOUR-USERNAME and YOUR-REPO in the two image lines below. -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Ihawon sa Oct 31 (Sabado) - 280 ang kilo">
+<meta property="og:title" content="Karne for sale">
 <meta property="og:description" content="Kinsay magkuha? Order na sa imong parte sa baboy.">
 <meta property="og:image" content="https://YOUR-USERNAME.github.io/YOUR-REPO/pig.jpg">
 <meta property="og:image:width" content="1200">
@@ -163,10 +163,64 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
 .pinicon{background:none;border:0}
 .leaflet-tooltip.pintip{background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:4px;font:600 12px/1.2 "Poppins",system-ui,sans-serif;padding:2px 6px;box-shadow:none}
 .leaflet-tooltip-top.pintip:before{border-top-color:var(--ink)}
-#adminRows .item{flex-wrap:wrap}
-#adminRows .item .n{flex:1 1 140px}
+/* compact admin list + 3-dot menu */
+#adminRows .item{gap:6px;padding:4px 0;font-size:14px;line-height:1.35;position:relative}
+#adminRows .meta{font-size:12px}
+#adminRows .chk{gap:0}
+#adminRows .chk input{width:20px;height:20px}
+button.pinb{padding:3px 5px}
+button.kebab{background:transparent;color:var(--ink);border:0;padding:3px 4px;display:flex;align-items:center}
+button.kebab:hover{background:var(--kraft)}
+.kmenu{position:absolute;right:0;top:100%;z-index:6;min-width:130px;background:#fff;border:2px solid var(--ink);border-radius:5px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+.kmenu button{display:block;width:100%;text-align:left;background:#fff;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:9px 12px;font-weight:600}
+.kmenu button:last-child{border-bottom:0}
+.kmenu button:hover{background:var(--kraft)}
+.kmenu button.del,.kmenu button.del:hover{color:var(--err)}
+.ptools{display:flex;gap:8px;margin:2px 0 8px}
+.ptools select{flex:1;min-width:0;padding:6px 8px}
+.ptools button{flex:0 0 auto;padding:6px 14px}
+#printArea{display:none}
+@media print{
+  body{display:block;padding:0;background:#fff;min-height:0}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important;color:#000;background:#fff;font:12px/1.4 "Poppins",Arial,sans-serif}
+  #printArea h1{font-size:18px;margin:0 0 2px}
+  #printArea h2{font-size:14px;margin:16px 0 4px}
+  #printArea p{margin:0 0 8px;color:#333}
+  #printArea table{width:100%;border-collapse:collapse}
+  #printArea th,#printArea td{border:1px solid #444;padding:3px 6px;text-align:left;vertical-align:top}
+  #printArea th{background:#eee}
+  #printArea .num{text-align:right;white-space:nowrap}
+  #printArea thead{display:table-header-group}
+  #printArea tr{page-break-inside:avoid}
+  #printArea tfoot td{font-weight:700}
+}
 .pop b{display:block}
 .pop a{font-weight:600;color:var(--meat-d)}
+/* settings accordion */
+details.acc{border:2px solid var(--ink);border-radius:6px;background:#fff;margin-top:8px;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:10px 12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"▾";transition:transform .2s}
+details.acc[open]>summary{background:var(--kraft);border-bottom:2px solid var(--ink)}
+details.acc[open]>summary::after{transform:rotate(180deg)}
+details.acc>.accbody{padding:2px 12px 12px;background:var(--paper)}
+details.acc>summary:focus-visible{outline:3px solid var(--meat);outline-offset:-3px}
+/* footer: contact owner */
+footer{position:relative}
+.ownwrap{position:relative}
+button.ownbtn{background:transparent;border:0;color:var(--kraft);padding:6px;font-weight:700;letter-spacing:.3px}
+button.ownbtn:hover{background:rgba(255,255,255,.12)}
+.ownmenu{position:absolute;left:0;bottom:calc(100% + 10px);z-index:6;width:min(300px,calc(100vw - 32px));background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:6px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.ownrow,footer .ownmenu a.ownrow{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-bottom:1px dashed var(--line);border-radius:0;padding:10px 12px;font-weight:600;text-decoration:none;font-size:15px;line-height:1.3}
+.ownrow:last-child{border-bottom:0}
+.ownrow:hover,footer .ownmenu a.ownrow:hover{background:var(--kraft)}
+.ownrow small{display:block;font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.ownrow span{overflow-wrap:anywhere}
+.ownmenu .empty{padding:10px 12px;margin:0}
+#viewMap{height:min(58vh,440px);width:100%}
+.btnlink{flex:1;display:block;text-align:center;font-weight:700;padding:9px 6px;font-size:14px;border:2px solid var(--ink);border-radius:5px;background:var(--meat);color:#fff;text-decoration:none}
+.btnlink:hover{background:var(--meat-d)}
 </style>
 </head>
 <body>
@@ -180,7 +234,7 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
     <div class="dots" id="dots"></div>
   </div>
   <main>
-    <div class="sign"><h1 id="signTitle">Ihawon sa Oct 31 (Sabado), tag 280 ang kilo, cash. Kinsay magkuha?</h1></div>
+    <div class="sign"><h1 id="signTitle">...</h1></div>
 
     <div class="panel">
       <h2>Pila imong Order:</h2>
@@ -242,7 +296,16 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
 
     <div class="panel">
       <h2>Mga nag-order</h2>
+      <div class="ptools">
+        <select id="printFilter" aria-label="Pilia kung unsa i-print">
+          <option value="all">I-print: Tanan</option>
+          <option value="pending">I-print: Wala pa na-deliver</option>
+          <option value="done">I-print: Na-deliver na</option>
+        </select>
+        <button type="button" class="ghost" id="printBtn">Print</button>
+      </div>
       <div id="adminRows"></div>
+      <p class="hint">Check box = na-deliver na. ⋮ = Edit / Papas.</p>
     </div>
 
     <div class="panel">
@@ -253,14 +316,19 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
 
     <div class="panel">
       <h2>Setting</h2>
+      <details class="acc"><summary>Sign ug presyo</summary><div class="accbody">
       <label for="signIn">Sign (header text)</label>
       <textarea id="signIn" rows="3" maxlength="200"></textarea>
       <p class="hint">Isulat ang {price} kung gusto nimo nga awtomatiko mapuli sa presyo.</p>
       <label for="priceIn">Presyo kada kilo (P)</label>
       <input id="priceIn" type="number" inputmode="decimal" min="1" step="any">
+      </div></details>
+      <details class="acc"><summary>Mga parte sa baboy</summary><div class="accbody">
       <label for="partsIn">Mga parte sa baboy (usa kada linya)</label>
       <textarea id="partsIn" rows="6"></textarea>
       <p class="hint">Pananglitan: <b>Pata 230</b>. Ang numero sa katapusan mao ang presyo kada kilo sa maong parte. Kung walay numero, gamiton ang "Presyo kada kilo" sa ibabaw.</p>
+      </div></details>
+      <details class="acc"><summary>Header images</summary><div class="accbody">
       <label for="img1">Header images (hangtod 5 ka Google Drive link)</label>
       <input id="img1" class="imgIn" type="url" placeholder="Image 1: https://drive.google.com/file/d/…/view" style="margin-top:0">
       <input id="img2" class="imgIn" type="url" placeholder="Image 2" aria-label="Image 2">
@@ -269,7 +337,8 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
       <input id="img5" class="imgIn" type="url" placeholder="Image 5" aria-label="Image 5">
       <p class="hint">I-share ang matag file sa Drive nga “Anyone with the link”, dayon i-paste ang link. Kung duha pataas ang image, mo-slide ang header.</p>
 
-      <h3 class="sub">Banner sa ubos (balita gikan sa tag-iya)</h3>
+      </div></details>
+      <details class="acc"><summary>Banner sa ubos (balita)</summary><div class="accbody">
       <div class="bnbox" id="bnBox">
         <label class="switch"><input type="checkbox" id="bnOn"> Ipakita ang banner sa ubos</label>
         <label for="bnText">Mga balita</label>
@@ -308,10 +377,25 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
         <p class="hint">Makita dayon sa ubos ang pagbag-o samtang nag-type ka. I-press ang Save aron makita sa tanan.</p>
       </div>
 
-      <h3 class="sub">Uban pang setting</h3>
+      </div></details>
+      <details class="acc"><summary>Uban pang setting</summary><div class="accbody">
       <label class="switch"><input type="checkbox" id="showList"> Ipakita ang lista sa mga nag-order sa main page</label>
       <label class="switch"><input type="checkbox" id="chatOn"> Ipakita ang group chat sa main page</label>
       <button type="button" class="ghost full" id="clearChat">I-clear ang chat</button>
+      </div></details>
+      <details class="acc"><summary>Contact sa tag-iya (footer)</summary><div class="accbody">
+        <label for="owName">Ngalan sa tag-iya</label>
+        <input id="owName" type="text" maxlength="60" autocomplete="off">
+        <label for="owInfo">Info sa tag-iya</label>
+        <textarea id="owInfo" rows="4" maxlength="500" placeholder="Pananglitan: Negosyo, oras sa pickup, paagi sa bayad…"></textarea>
+        <label for="owPhone">Mobile number</label>
+        <input id="owPhone" type="tel" inputmode="tel" maxlength="20" placeholder="09XX XXX XXXX" autocomplete="off">
+        <label for="owLoc">Ngalan sa location (optional)</label>
+        <input id="owLoc" type="text" maxlength="80" placeholder="Pananglitan: Brgy. ___, Lagonglong" autocomplete="off">
+        <button type="button" class="ghost full pinrow" id="owPin"></button>
+        <p class="hint" id="owPinInfo"></p>
+        <p class="hint">Kining impormasyon makita sa tanang bisita pinaagi sa "Contact owner" sa ubos.</p>
+      </div></details>
       <button class="full" id="saveSet">Save</button>
       <p class="msg" id="setMsg" role="status"></p>
     </div>
@@ -346,8 +430,13 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
   <button type="button" class="lbclose" id="lbClose" aria-label="Isira">✕</button>
 </div>
 
+<div id="printArea" aria-hidden="true"></div>
+
 <footer>
-  <b>RekzBanz</b>
+  <div class="ownwrap">
+    <button type="button" class="ownbtn" id="ownBtn" aria-expanded="false" aria-haspopup="true">Contact owner <span id="ownCaret">▴</span></button>
+    <div class="ownmenu hide" id="ownMenu" role="menu"></div>
+  </div>
   <a id="adminLink" role="button" tabindex="0">Admin</a>
 </footer>
 
@@ -385,6 +474,26 @@ button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
   </div>
 </div>
 
+<div class="modal" id="ownerModal" role="dialog" aria-label="Info sa tag-iya">
+  <div class="panel">
+    <h2 id="ownerTitle">Tag-iya</h2>
+    <p id="ownerInfoTxt" style="white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 10px"></p>
+    <button type="button" class="full" id="ownerClose">Close</button>
+  </div>
+</div>
+
+<div class="modal mapmodal" id="viewModal" role="dialog" aria-label="Location sa tag-iya">
+  <div class="mapbox">
+    <div class="maphead"><span id="viewTitle">Location</span><button type="button" class="chatx" id="viewX" aria-label="Isira ang mapa">✕</button></div>
+    <div id="viewMap"></div>
+    <p class="mapmsg" id="viewLoc"></p>
+    <div class="maprow">
+      <a class="btnlink" id="viewDir" href="#" target="_blank" rel="noopener">Direksyon sa Google Maps</a>
+      <button type="button" class="ghost" id="viewClose">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="passModal">
   <div class="panel">
     <h2>Admin</h2>
@@ -405,8 +514,8 @@ const KEY = '$2a$10$QRwVf3OgkrsAGNkRCgouRebBADnAcFGs/l8ZzN8YICcI7/NCaf3Ia';
 const API = 'https://api.jsonbin.io/v3/b/' + BIN;
 const DEFAULT_PRICE = 280, PASS = '111';
 const DEFAULT_PARTS = ['Liempo', 'Kasim', 'Pigue', 'Tadyang', 'Pata', 'Bisan unsa'];
-const DEFAULT_SIGN = 'Ihawon sa Oct 31 (Sabado), tag {price} ang kilo, cash. Kinsay magkuha?';
-const DEFAULT_BANNER = { on: false, text: '', label: 'BALITA', speed: 'normal', bg: '#ffd54a', fg: '#1c2b21' };
+const DEFAULT_SIGN = '...';
+const DEFAULT_BANNER = { on: false, text: '', label: 'Update:', speed: 'normal', bg: '#ffd54a', fg: '#1c2b21' };
 
 let data = { settings: { imageUrl: '', imageUrls: ['', '', '', '', ''], showList: true, signText: DEFAULT_SIGN, price: DEFAULT_PRICE, parts: DEFAULT_PARTS.slice(), chatOn: true, banner: Object.assign({}, DEFAULT_BANNER) }, orders: [], chat: [] };
 let isAdmin = false;
@@ -677,6 +786,10 @@ function fillSettings() {
   $('bnSpeed').value = BN_SPEED[b.speed] ? b.speed : 'normal';
   $('bnBg').value = okHex(b.bg, DEFAULT_BANNER.bg);
   $('bnFg').value = okHex(b.fg, DEFAULT_BANNER.fg);
+  const ow = ownerCfg();
+  $('owName').value = ow.name; $('owInfo').value = ow.info; $('owPhone').value = ow.phone; $('owLoc').value = ow.locLabel;
+  ownPin = hasPin(ow) ? { lat: ow.lat, lng: ow.lng } : null;
+  updateOwnPinUi();
 }
 function partSummary(rows) {
   const m = {};
@@ -685,6 +798,8 @@ function partSummary(rows) {
   return '<h3 class="sub">Kilo kada parte</h3>' + Object.keys(m).map(k =>
     '<div class="item"><span class="n">' + esc(k) + '</span><span class="k">' + kg(m[k]) + ' kg</span><span class="k">' + peso(amt[k]) + '</span></div>').join('');
 }
+let menuId = null; // which order's 3-dot menu is open
+const KEBAB_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
 function renderAdmin() {
   const rows = data.orders;
   const total = rows.reduce((a, o) => a + Number(o.kilo || 0), 0);
@@ -693,9 +808,12 @@ function renderAdmin() {
     ? rows.map(o => '<div class="item"><span class="n">' + esc(o.name) + meta(o, peso(o.kilo * partPrice(o.part))) + '</span>' +
         '<span class="k">' + kg(o.kilo) + ' kg</span>' +
         (hasPin(o) ? '<button type="button" class="ghost sm pinb" data-loc="' + esc(o.id) + '" aria-label="Tan-awa sa mapa si ' + esc(o.name) + '">' + PIN_SVG + '</button>' : '') +
-        '<button type="button" class="ghost sm" data-aedit="' + esc(o.id) + '" aria-label="I-edit ang order ni ' + esc(o.name) + '">Edit</button>' +
-        '<label class="chk"><input type="checkbox" data-id="' + esc(o.id) + '"' + (o.delivered ? ' checked' : '') + '> Delivery</label>' +
-        '<button class="danger" data-del="' + esc(o.id) + '" aria-label="Papasa ' + esc(o.name) + '">✕</button></div>').join('') +
+        '<label class="chk" title="Na-deliver na"><input type="checkbox" data-id="' + esc(o.id) + '"' + (o.delivered ? ' checked' : '') + ' aria-label="Na-deliver na si ' + esc(o.name) + '"></label>' +
+        '<button type="button" class="kebab" data-menu="' + esc(o.id) + '" aria-label="Mga opsyon para ni ' + esc(o.name) + '" aria-haspopup="true">' + KEBAB_SVG + '</button>' +
+        (o.id === menuId
+          ? '<div class="kmenu" role="menu"><button type="button" role="menuitem" data-aedit="' + esc(o.id) + '">Edit</button><button type="button" role="menuitem" class="del" data-del="' + esc(o.id) + '">Delete</button></div>'
+          : '') +
+        '</div>').join('') +
       '<div class="sum"><span>Total: ' + kg(total) + ' kg</span><span>' + peso(totalAmt) + '</span></div>' + partSummary(rows)
     : '<p class="empty">Wala pay nag-order.</p>';
   renderAdminMap();
@@ -707,12 +825,15 @@ async function saveSettings() {
   let parts = $('partsIn').value.split('\n').map(x => x.trim()).filter(Boolean);
   parts = parts.filter((x, i) => parts.indexOf(x) === i).slice(0, 30);
   if (!parts.length) parts = DEFAULT_PARTS.slice();
-  if (!(newPrice > 0)) { msg.className = 'msg err'; msg.textContent = 'Ibutang ang saktong presyo.'; return; }
+  const openSec = id => { const d = $(id).closest('details'); if (d) d.open = true; };
+  if (!(newPrice > 0)) { openSec('priceIn'); msg.className = 'msg err'; msg.textContent = 'Ibutang ang saktong presyo.'; return; }
   const banner = readBannerForm();
-  if (banner.on && !banner.text.trim()) { msg.className = 'msg err'; msg.textContent = 'Isulat una ang balita para sa banner.'; $('bnText').focus(); return; }
+  if (banner.on && !banner.text.trim()) { openSec('bnText'); msg.className = 'msg err'; msg.textContent = 'Isulat una ang balita para sa banner.'; $('bnText').focus(); return; }
+  const owner = readOwnerForm();
+  if (owner.phone && owner.phone.replace(/\D/g, '').length < 7) { openSec('owPhone'); msg.className = 'msg err'; msg.textContent = 'Saktoha ang mobile number.'; $('owPhone').focus(); return; }
   btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Gi-save…';
   try {
-    await mutate(() => { Object.assign(data.settings, { signText, price: newPrice, imageUrls, imageUrl: '', showList, chatOn, parts, banner }); });
+    await mutate(() => { Object.assign(data.settings, { signText, price: newPrice, imageUrls, imageUrl: '', showList, chatOn, parts, banner, owner }); });
     msg.className = 'msg ok'; msg.textContent = 'Na-save na.';
     renderAll();
   } catch (e) { msg.className = 'msg err'; msg.textContent = 'Wala na-save. ' + e.message; }
@@ -727,8 +848,9 @@ $('adminRows').addEventListener('change', async e => {
 });
 $('adminRows').addEventListener('click', async e => {
   const id = e.target.dataset.del; if (!id) return;
+  menuId = null; renderAdmin();
   const o = data.orders.find(x => x.id === id);
-  if (!o || !confirm('Papason ang order ni ' + o.name + '?')) return;
+  if (!o || !confirm('i-delete ang order ni ' + o.name + '?')) return;
   try { await mutate(() => { data.orders = data.orders.filter(x => x.id !== id); }); }
   catch (err) { alert('Wala na-save. ' + err.message); }
   renderAll();
@@ -808,7 +930,7 @@ function renderChat() {
     return '<div class="bub' + (mine ? ' me' : '') + '">' +
       (mine ? '' : '<span class="who">' + esc(m.name) + (m.admin ? '<span class="atag">Admin</span>' : '') + '</span>') +
       '<span class="txt">' + esc(m.text) + '</span>' +
-      '<span class="ts">' + fmtTime(m.ts) + (admin ? ' <button type="button" class="mdel" data-mid="' + esc(m.id) + '" aria-label="Papasa ang mensahe">✕</button>' : '') + '</span></div>';
+      '<span class="ts">' + fmtTime(m.ts) + (admin ? ' <button type="button" class="mdel" data-mid="' + esc(m.id) + '" aria-label="i-delete ang mensahe">✕</button>' : '') + '</span></div>';
   }).join('') : '<p class="empty">Wala pay mensahe. Mag-unang hi!</p>';
   if (chatOpen && near) chatBottom();
   $('cWho').classList.toggle('hide', admin);
@@ -852,7 +974,7 @@ async function sendChat() {
 // refresh from the cloud: every 8s while the chat is open, every 60s while closed, never while the tab is hidden
 async function pollChat() {
   if (writing) return;
-  try { await load(); renderHero(); renderSign(); renderChat(); renderPublic(); renderMine(); renderBanner(); if (adminOn()) renderAdmin(); } catch (e) {}
+  try { await load(); renderHero(); renderSign(); renderChat(); renderPublic(); renderMine(); renderBanner(); renderOwner(); if (adminOn()) renderAdmin(); } catch (e) {}
 }
 function schedulePoll() {
   clearTimeout(pollTimer);
@@ -1137,7 +1259,10 @@ $('eSave').onclick = async () => {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if ($('mapModal').classList.contains('on')) closeMap();
+  else if ($('viewModal').classList.contains('on')) closeViewMap();
+  else if ($('ownerModal').classList.contains('on')) $('ownerModal').classList.remove('on');
   else if ($('editModal').classList.contains('on')) closeEdit();
+  else if (!$('ownMenu').classList.contains('hide')) toggleOwnMenu(false);
 });
 
 /* ---------- admin: map of all pinned customers ---------- */
@@ -1177,8 +1302,48 @@ function renderAdminMap() {
 }
 $('adminRows').addEventListener('click', e => {
   const a = e.target.closest('[data-aedit]');
-  if (a) openEdit(a.dataset.aedit, true);
+  if (a) { menuId = null; renderAdmin(); openEdit(a.dataset.aedit, true); }
 });
+// 3-dot menu: tap to open/close; tapping anywhere else closes it
+$('adminRows').addEventListener('click', e => {
+  const k = e.target.closest('[data-menu]');
+  if (!k) return;
+  e.stopPropagation();
+  menuId = menuId === k.dataset.menu ? null : k.dataset.menu;
+  renderAdmin();
+});
+document.addEventListener('click', e => {
+  // remove the menu without re-rendering the list, so a checkbox tap in the same click still registers
+  if (menuId && !e.target.closest('.kmenu')) { menuId = null; document.querySelectorAll('.kmenu').forEach(m => m.remove()); }
+});
+
+/* ---------- admin: print orders ---------- */
+function printOrders() {
+  const f = $('printFilter').value;
+  const rows = data.orders.filter(o => f === 'all' || (f === 'done' ? o.delivered : !o.delivered));
+  if (!rows.length) { alert('Walay order nga i-print sa gipili nga lista.'); return; }
+  const label = { all: 'Tanan nga order', pending: 'Wala pa na-deliver', done: 'Na-deliver na' }[f];
+  const title = (data.settings.signText || DEFAULT_SIGN).replace(/\{price\}/g, price());
+  const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+  let totK = 0, totA = 0;
+  const parts = {};
+  const body = rows.map((o, i) => {
+    const k = Number(o.kilo || 0), pp = partPrice(o.part), a = k * pp;
+    totK += k; totA += a;
+    const g = parts[o.part || 'Walay parte'] || (parts[o.part || 'Walay parte'] = { k: 0, a: 0 });
+    g.k += k; g.a += a;
+    return '<tr><td>' + (i + 1) + '</td><td>' + esc(o.name) + '</td><td>' + esc(o.part || '') + '</td><td class="num">' + kg(k) + '</td><td class="num">' + peso(pp) + '</td><td class="num">' + peso(a) + '</td><td>' + esc(o.note || '') + '</td><td>' + (o.delivered ? 'Na-deliver' : '&#9744;') + '</td></tr>';
+  }).join('');
+  const sum = Object.keys(parts).map(k => '<tr><td>' + esc(k) + '</td><td class="num">' + kg(parts[k].k) + ' kg</td><td class="num">' + peso(parts[k].a) + '</td></tr>').join('');
+  $('printArea').innerHTML =
+    '<h1>' + esc(title) + '</h1><p>' + esc(label) + ' &middot; ' + esc(today) + ' &middot; ' + rows.length + ' ka order</p>' +
+    '<table><thead><tr><th>#</th><th>Ngalan</th><th>Parte</th><th class="num">Kilo</th><th class="num">Presyo/kg</th><th class="num">Kantidad</th><th>Address/Notes</th><th>Deliver</th></tr></thead><tbody>' + body +
+    '</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">' + kg(totK) + '</td><td></td><td class="num">' + peso(totA) + '</td><td colspan="2"></td></tr></tfoot></table>' +
+    '<h2>Kilo kada parte</h2><table><thead><tr><th>Parte</th><th class="num">Kilo</th><th class="num">Kantidad</th></tr></thead><tbody>' + sum + '</tbody></table>';
+  setTimeout(() => window.print(), 60);
+}
+$('printBtn').onclick = printOrders;
+window.addEventListener('afterprint', () => { $('printArea').innerHTML = ''; });
 $('adminRows').addEventListener('click', e => {
   const b = e.target.closest('[data-loc]');
   if (!b || !adminMap) return;
@@ -1190,8 +1355,89 @@ $('adminRows').addEventListener('click', e => {
   if (m) m.openPopup();
 });
 
+/* ---------- settings accordion: one section open at a time ---------- */
+document.querySelectorAll('details.acc').forEach(d => d.addEventListener('toggle', () => {
+  if (d.open) document.querySelectorAll('details.acc').forEach(o => { if (o !== d) o.open = false; });
+}));
+
+/* ---------- owner contact (footer "Contact owner") ---------- */
+const OWNER_DEF = { name: '', info: '', phone: '', locLabel: '', lat: null, lng: null };
+const ownerCfg = () => Object.assign({}, OWNER_DEF, data.settings.owner && typeof data.settings.owner === 'object' ? data.settings.owner : {});
+const telHref = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
+let ownPin = null;
+function updateOwnPinUi() {
+  $('owPin').innerHTML = PIN_SVG + '<span>' + (ownPin ? 'Usbon ang pin sa location' : 'I-pin ang location') + '</span>';
+  $('owPinInfo').textContent = ownPin ? 'Naay pin: ' + ownPin.lat.toFixed(5) + ', ' + ownPin.lng.toFixed(5) : 'Wala pay pin.';
+}
+$('owPin').onclick = () => openMap(ownPin, p => { ownPin = p; updateOwnPinUi(); }, 'I-pin ang location sa tag-iya');
+function readOwnerForm() {
+  return {
+    name: $('owName').value.trim().slice(0, 60),
+    info: $('owInfo').value.trim().slice(0, 500),
+    phone: $('owPhone').value.trim().slice(0, 20),
+    locLabel: $('owLoc').value.trim().slice(0, 80),
+    lat: ownPin ? ownPin.lat : null,
+    lng: ownPin ? ownPin.lng : null
+  };
+}
+function renderOwner() {
+  const ow = ownerCfg(), rows = [];
+  if (ow.name || ow.info) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="info"><small>Tag-iya (Click)</small><span>' + esc(ow.name || 'Info sa tag-iya') + '</span></button>');
+  if (hasPin(ow)) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="map"><small>Location (Click)</small><span>' + esc(ow.locLabel || 'Tan-awa sa mapa') + '</span></button>');
+  else if (ow.locLabel) rows.push('<div class="ownrow"><small>Location</small><span>' + esc(ow.locLabel) + '</span></div>');
+  if (String(ow.phone).replace(/\D/g, '')) rows.push('<a class="ownrow" role="menuitem" href="' + esc(telHref(ow.phone)) + '"><small>Mobile (Click)</small><span>' + esc(ow.phone) + '</span></a>');
+  $('ownMenu').innerHTML = rows.length ? rows.join('') : '<p class="empty">Wala pay contact info.</p>';
+}
+function toggleOwnMenu(on) {
+  const open = on === undefined ? $('ownMenu').classList.contains('hide') : on;
+  $('ownMenu').classList.toggle('hide', !open);
+  $('ownBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+  $('ownCaret').textContent = open ? '▾' : '▴';
+}
+$('ownBtn').onclick = e => { e.stopPropagation(); toggleOwnMenu(); };
+document.addEventListener('click', e => { if (!e.target.closest('.ownwrap')) toggleOwnMenu(false); });
+$('ownMenu').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) { if (e.target.closest('a')) toggleOwnMenu(false); return; } // the call link keeps its default action: opens the dialer
+  toggleOwnMenu(false);
+  if (b.dataset.act === 'info') {
+    const ow = ownerCfg();
+    $('ownerTitle').textContent = ow.name || 'Tag-iya';
+    $('ownerInfoTxt').textContent = ow.info || 'Wala pay dugang nga info.';
+    $('ownerModal').classList.add('on');
+  } else openOwnerMap();
+});
+$('ownerClose').onclick = () => $('ownerModal').classList.remove('on');
+$('ownerModal').addEventListener('click', e => { if (e.target === $('ownerModal')) $('ownerModal').classList.remove('on'); });
+
+// view-only map with the owner's saved pin
+let viewMap = null, viewMarker = null;
+function openOwnerMap() {
+  const ow = ownerCfg();
+  if (!hasPin(ow)) return;
+  if (!hasLeaflet()) { alert('Wala ma-load ang mapa. Check ang internet ug i-refresh ang page.'); return; }
+  $('viewTitle').textContent = 'Location' + (ow.name ? ' ni ' + ow.name : '');
+  $('viewLoc').textContent = ow.locLabel || '';
+  $('viewDir').href = gmapsDir(ow.lat, ow.lng);
+  $('viewModal').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  if (!viewMap) { viewMap = L.map('viewMap'); addBases(viewMap); }
+  viewMap.invalidateSize();
+  viewMap.setView([ow.lat, ow.lng], 16);
+  if (viewMarker) viewMap.removeLayer(viewMarker);
+  viewMarker = L.marker([ow.lat, ow.lng], { icon: pinIcon('#c62828') }).addTo(viewMap);
+  viewMarker.bindTooltip(esc(ow.name || 'Tag-iya'), { permanent: true, direction: 'top', className: 'pintip' });
+}
+function closeViewMap() {
+  $('viewModal').classList.remove('on');
+  document.body.style.overflow = '';
+}
+$('viewX').onclick = closeViewMap;
+$('viewClose').onclick = closeViewMap;
+$('viewModal').addEventListener('click', e => { if (e.target === $('viewModal')) closeViewMap(); });
+
 /* ---------- boot ---------- */
-function renderAll() { renderHero(); renderSign(); renderPublic(); renderMine(); renderAdmin(); renderChat(); renderBanner(); }
+function renderAll() { renderHero(); renderSign(); renderPublic(); renderMine(); renderAdmin(); renderChat(); renderBanner(); renderOwner(); }
 async function refresh() {
   try { await load(); $('status').textContent = ''; }
   catch (e) { $('status').textContent = 'Dili ma-konek sa cloud. ' + e.message; }
