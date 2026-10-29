@@ -209,9 +209,11 @@ details.acc>summary:focus-visible{outline:3px solid var(--meat);outline-offset:-
 /* footer: contact owner */
 footer{position:relative}
 .ownwrap{position:relative}
-button.ownbtn{background:transparent;border:0;color:var(--kraft);padding:6px;font-weight:700;letter-spacing:.3px}
-button.ownbtn:hover{background:rgba(255,255,255,.12)}
-.ownmenu{position:absolute;left:0;bottom:calc(100% + 10px);z-index:6;width:min(300px,calc(100vw - 32px));background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:6px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.ownbar{display:flex;justify-content:flex-end;margin:-10px 0 8px;position:relative;z-index:3}
+footer{justify-content:flex-end}
+button.ownbtn{background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:16px;padding:3px 12px;font-size:13px;font-weight:700;letter-spacing:.2px;box-shadow:0 2px 0 var(--meat-d)}
+button.ownbtn:hover{background:var(--kraft)}
+.ownmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:6;width:min(300px,calc(100vw - 32px));background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:6px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .ownrow,footer .ownmenu a.ownrow{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-bottom:1px dashed var(--line);border-radius:0;padding:10px 12px;font-weight:600;text-decoration:none;font-size:15px;line-height:1.3}
 .ownrow:last-child{border-bottom:0}
 .ownrow:hover,footer .ownmenu a.ownrow:hover{background:var(--kraft)}
@@ -235,6 +237,13 @@ button.ownbtn:hover{background:rgba(255,255,255,.12)}
   </div>
   <main>
     <div class="sign"><h1 id="signTitle">...</h1></div>
+
+    <div class="ownbar">
+      <div class="ownwrap">
+        <button type="button" class="ownbtn" id="ownBtn" aria-expanded="false" aria-haspopup="true">Contact owner <span id="ownCaret">▾</span></button>
+        <div class="ownmenu hide" id="ownMenu" role="menu"></div>
+      </div>
+    </div>
 
     <div class="panel">
       <h2>Pila imong Order:</h2>
@@ -433,10 +442,6 @@ button.ownbtn:hover{background:rgba(255,255,255,.12)}
 <div id="printArea" aria-hidden="true"></div>
 
 <footer>
-  <div class="ownwrap">
-    <button type="button" class="ownbtn" id="ownBtn" aria-expanded="false" aria-haspopup="true">Contact owner <span id="ownCaret">▴</span></button>
-    <div class="ownmenu hide" id="ownMenu" role="menu"></div>
-  </div>
   <a id="adminLink" role="button" tabindex="0">Admin</a>
 </footer>
 
@@ -1392,7 +1397,7 @@ function toggleOwnMenu(on) {
   const open = on === undefined ? $('ownMenu').classList.contains('hide') : on;
   $('ownMenu').classList.toggle('hide', !open);
   $('ownBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
-  $('ownCaret').textContent = open ? '▾' : '▴';
+  $('ownCaret').textContent = open ? '▴' : '▾';
 }
 $('ownBtn').onclick = e => { e.stopPropagation(); toggleOwnMenu(); };
 document.addEventListener('click', e => { if (!e.target.closest('.ownwrap')) toggleOwnMenu(false); });
