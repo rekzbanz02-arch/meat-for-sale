@@ -18,6 +18,7 @@
 <meta name="twitter:image" content="https://YOUR-USERNAME.github.io/YOUR-REPO/pig.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--bh:0px;--kraft:#d9ead3;--paper:#f6fbf3;--ink:#1c2b21;--muted:#55695a;--meat:#1f7a3d;--meat-d:#165c2d;--line:#b3cfae;--ok:#1b5e20;--err:#b3261e}
 *{box-sizing:border-box}
@@ -119,7 +120,7 @@ footer b{letter-spacing:.3px}
 footer a{color:var(--kraft);cursor:pointer;text-decoration:underline;padding:6px}
 .modal{position:fixed;inset:0;background:rgba(28,43,33,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
 .modal.on{display:flex}
-.modal .panel{width:100%;max-width:340px}
+.modal .panel{width:100%;max-width:340px;max-height:100%;overflow:auto}
 .hide{display:none!important}
 /* ---------- footer banner ---------- */
 .banner{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:7;display:flex;align-items:center;overflow:hidden;background:var(--bn-bg,#ffd54a);color:var(--bn-fg,#1c2b21);font-size:13px;font-weight:600;line-height:1;border-top:2px solid rgba(0,0,0,.25)}
@@ -137,6 +138,33 @@ input[type=color]{height:42px;padding:3px;cursor:pointer}
 .presets button{padding:6px 12px;font-size:13px}
 
 .status{font-size:14px;color:var(--muted);text-align:center;margin-top:12px}
+
+/* ---------- map pins ---------- */
+.leaflet-container{z-index:0;font-family:inherit}
+.orderRow{display:flex;gap:8px;margin-top:10px}
+.orderRow #orderBtn{flex:1;min-width:0}
+button.locbtn{flex:0 0 54px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--ink)}
+button.locbtn:hover{background:var(--kraft)}
+button.locbtn.on{background:var(--meat);color:#fff}
+button.locbtn.on:hover{background:var(--meat-d)}
+button.sm{padding:5px 10px;font-size:13px}
+button.pinb{padding:5px 7px;display:flex;align-items:center}
+button.pinrow{display:flex;align-items:center;justify-content:center;gap:8px}
+.pinhint{font-size:13px;color:var(--ok);font-weight:600;margin:6px 0 0}
+.pinhint:empty{display:none}
+.mapmodal{z-index:12;padding:10px}
+.mapbox{width:100%;max-width:560px;max-height:100%;display:flex;flex-direction:column;background:var(--paper);border:2px solid var(--ink);border-radius:8px;overflow:hidden}
+.maphead{display:flex;justify-content:space-between;align-items:center;background:var(--meat);color:#fff;padding:6px 6px 6px 12px;font-weight:700}
+#pickMap{height:min(58vh,440px);width:100%}
+.mapmsg{margin:0;padding:8px 12px 0;font-size:13px;color:var(--muted);min-height:2.6em}
+.maprow{display:flex;gap:8px;padding:8px 10px 10px}
+.maprow button{flex:1;padding:9px 6px;font-size:14px}
+#adminMap{height:340px;margin-top:6px;border:2px solid var(--ink);border-radius:5px}
+.pinicon{background:none;border:0}
+.leaflet-tooltip.pintip{background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:4px;font:600 12px/1.2 "Poppins",system-ui,sans-serif;padding:2px 6px;box-shadow:none}
+.leaflet-tooltip-top.pintip:before{border-top-color:var(--ink)}
+.pop b{display:block}
+.pop a{font-weight:600;color:var(--meat-d)}
 </style>
 </head>
 <body>
@@ -182,8 +210,20 @@ input[type=color]{height:42px;padding:3px;cursor:pointer}
           <input id="noteIn" type="text" maxlength="80" placeholder="Address ug note" autocomplete="off">
         </div>
       </div>
-      <button class="full" id="orderBtn">Submit order</button>
+      <div class="orderRow">
+        <button type="button" class="ghost locbtn" id="locBtn" aria-label="I-pin ang akong location sa mapa" title="I-pin ang akong location">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>
+        </button>
+        <button id="orderBtn">Submit order</button>
+      </div>
+      <p class="pinhint" id="pinInfo"></p>
       <p class="msg" id="orderMsg" role="status"></p>
+    </div>
+
+    <div class="panel list hide" id="minePanel">
+      <h2>Imong mga order</h2>
+      <div id="mineRows"></div>
+      <p class="hint">Ikaw ra ang makaedit sa imong order, gikan ani nga phone/browser.</p>
     </div>
 
     <div class="panel list hide" id="publicList">
@@ -201,6 +241,12 @@ input[type=color]{height:42px;padding:3px;cursor:pointer}
     <div class="panel">
       <h2>Mga nag-order</h2>
       <div id="adminRows"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Mapa sa mga customer</h2>
+      <div id="adminMap"></div>
+      <p class="hint" id="adminMapInfo"></p>
     </div>
 
     <div class="panel">
@@ -303,6 +349,40 @@ input[type=color]{height:42px;padding:3px;cursor:pointer}
   <a id="adminLink" role="button" tabindex="0">Admin</a>
 </footer>
 
+<div class="modal" id="editModal">
+  <div class="panel">
+    <h2>I-edit ang order</h2>
+    <label for="eKilo">Kilo</label>
+    <input id="eKilo" type="text" inputmode="decimal" autocomplete="off" maxlength="6">
+    <label for="ePart">Parte sa baboy</label>
+    <select id="ePart"></select>
+    <label for="eName">Ngalan</label>
+    <input id="eName" type="text" maxlength="60" autocomplete="name">
+    <label for="eNote">Address/Notes</label>
+    <input id="eNote" type="text" maxlength="80" autocomplete="off">
+    <button type="button" class="ghost full pinrow" id="ePin"></button>
+    <p class="hint" id="ePinInfo"></p>
+    <p class="msg" id="eMsg" role="status"></p>
+    <div class="row" style="margin-top:8px">
+      <button type="button" class="ghost" id="eCancel">Cancel</button>
+      <button type="button" id="eSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal mapmodal" id="mapModal" role="dialog" aria-label="Mapa">
+  <div class="mapbox">
+    <div class="maphead"><span>I-pin ang imong location</span><button type="button" class="chatx" id="mapX" aria-label="Isira ang mapa">✕</button></div>
+    <div id="pickMap"></div>
+    <p class="mapmsg" id="mapMsg"></p>
+    <div class="maprow">
+      <button type="button" class="ghost" id="mapGps">Akong location</button>
+      <button type="button" class="ghost" id="mapClear">Tangtang</button>
+      <button type="button" id="mapSave">Save pin</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="passModal">
   <div class="panel">
     <h2>Admin</h2>
@@ -316,6 +396,7 @@ input[type=color]{height:42px;padding:3px;cursor:pointer}
   </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const BIN = '6ae27c3bac6210605a5a8090';
 const KEY = '$2a$10$QRwVf3OgkrsAGNkRCgouRebBADnAcFGs/l8ZzN8YICcI7/NCaf3Ia';
@@ -560,10 +641,16 @@ async function submitOrder() {
   if (!(k > 0)) { msg.textContent = 'Ibutang kung pila ka kilo.'; return; }
   btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Gi-save…';
   try {
-    await mutate(() => data.orders.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, part, note, kilo: k, delivered: false, ts: Date.now() }));
+    const pin = formPin;
+    await mutate(() => {
+      const o = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cid: myCid, name, part, note, kilo: k, delivered: false, ts: Date.now() };
+      if (pin) { o.lat = pin.lat; o.lng = pin.lng; }
+      data.orders.push(o);
+    });
     msg.className = 'msg ok';
     msg.textContent = 'Salamat, ' + name + '! ' + kg(k) + ' kg ' + part + ' ang imong order.';
     $('buyer').value = ''; $('noteIn').value = '';
+    formPin = null; updatePinUi();
     renderAll();
   } catch (e) {
     msg.className = 'msg err';
@@ -603,10 +690,12 @@ function renderAdmin() {
   $('adminRows').innerHTML = rows.length
     ? rows.map(o => '<div class="item"><span class="n">' + esc(o.name) + meta(o, peso(o.kilo * partPrice(o.part))) + '</span>' +
         '<span class="k">' + kg(o.kilo) + ' kg</span>' +
+        (hasPin(o) ? '<button type="button" class="ghost sm pinb" data-loc="' + esc(o.id) + '" aria-label="Tan-awa sa mapa si ' + esc(o.name) + '">' + PIN_SVG + '</button>' : '') +
         '<label class="chk"><input type="checkbox" data-id="' + esc(o.id) + '"' + (o.delivered ? ' checked' : '') + '> Delivery</label>' +
         '<button class="danger" data-del="' + esc(o.id) + '" aria-label="Papasa ' + esc(o.name) + '">✕</button></div>').join('') +
       '<div class="sum"><span>Total: ' + kg(total) + ' kg</span><span>' + peso(totalAmt) + '</span></div>' + partSummary(rows)
     : '<p class="empty">Wala pay nag-order.</p>';
+  renderAdminMap();
 }
 async function saveSettings() {
   const msg = $('setMsg'), btn = $('saveSet');
@@ -760,7 +849,7 @@ async function sendChat() {
 // refresh from the cloud: every 8s while the chat is open, every 60s while closed, never while the tab is hidden
 async function pollChat() {
   if (writing) return;
-  try { await load(); renderHero(); renderSign(); renderChat(); renderPublic(); renderBanner(); if (adminOn()) renderAdmin(); } catch (e) {}
+  try { await load(); renderHero(); renderSign(); renderChat(); renderPublic(); renderMine(); renderBanner(); if (adminOn()) renderAdmin(); } catch (e) {}
 }
 function schedulePoll() {
   clearTimeout(pollTimer);
@@ -859,8 +948,218 @@ let bnResize = null;
 window.addEventListener('resize', () => { clearTimeout(bnResize); bnResize = setTimeout(renderBanner, 200); });
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { bnSig = ''; renderBanner(); });
 
+/* ---------- map pins (Leaflet + OpenStreetMap) ---------- */
+const MAP_HOME = [8.8167, 124.7667]; // Lagonglong, Misamis Oriental
+const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_OPT = { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' };
+const PIN_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+const hasLeaflet = () => typeof L !== 'undefined';
+const hasPin = o => !!o && typeof o.lat === 'number' && typeof o.lng === 'number' && isFinite(o.lat) && isFinite(o.lng);
+const round6 = n => Math.round(n * 1e6) / 1e6;
+const gmapsDir = (la, ln) => 'https://www.google.com/maps/dir/?api=1&destination=' + la + ',' + ln;
+function pinIcon(color) {
+  return L.divIcon({
+    className: 'pinicon',
+    html: '<svg width="30" height="40" viewBox="0 0 30 40" aria-hidden="true"><path d="M15 39C15 39 2 24 2 14a13 13 0 0 1 26 0c0 10-13 25-13 25z" fill="' + color + '" stroke="#1c2b21" stroke-width="2"/><circle cx="15" cy="14" r="5" fill="#fff"/></svg>',
+    iconSize: [30, 40], iconAnchor: [15, 39], tooltipAnchor: [0, -34], popupAnchor: [0, -34]
+  });
+}
+
+// picker: opens the map, the customer taps/drags a pin, then cb(pos) gets {lat,lng} (or null if cleared)
+let pickMap = null, pickMarker = null, pickCb = null, pickPos = null, pickCleared = false;
+function mapNote(t, err) { const m = $('mapMsg'); m.textContent = t; m.style.color = err ? 'var(--err)' : ''; }
+function drawPick() {
+  if (pickMarker) { pickMap.removeLayer(pickMarker); pickMarker = null; }
+  if (!pickPos) return;
+  pickMarker = L.marker([pickPos.lat, pickPos.lng], { icon: pinIcon('#c62828'), draggable: true }).addTo(pickMap);
+  pickMarker.on('dragend', () => {
+    const p = pickMarker.getLatLng();
+    pickPos = { lat: round6(p.lat), lng: round6(p.lng) };
+    mapNote('Gi-usab ang pin. I-press ang Save pin.');
+  });
+}
+function placePick(ll, zoom) {
+  pickPos = { lat: round6(ll.lat), lng: round6(ll.lng) };
+  pickCleared = false;
+  drawPick();
+  if (zoom) pickMap.setView([pickPos.lat, pickPos.lng], zoom);
+  mapNote('Naka-pin na. I-drag ang pin kung dili sakto, dayon i-press ang Save pin.');
+}
+function openMap(initial, cb) {
+  if (!hasLeaflet()) { alert('Wala ma-load ang mapa. Check ang internet ug i-refresh ang page.'); return; }
+  pickCb = cb;
+  pickPos = hasPin(initial) ? { lat: initial.lat, lng: initial.lng } : null;
+  pickCleared = false;
+  $('mapModal').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  if (!pickMap) {
+    pickMap = L.map('pickMap');
+    L.tileLayer(TILES, TILE_OPT).addTo(pickMap);
+    pickMap.on('click', e => placePick(e.latlng));
+  }
+  pickMap.invalidateSize();
+  pickMap.setView(pickPos ? [pickPos.lat, pickPos.lng] : MAP_HOME, pickPos ? 17 : 14);
+  drawPick();
+  mapNote(pickPos ? 'Ang imong pin. I-tap ang mapa o i-drag ang pin aron usbon.' : 'I-tap ang mapa aron ibutang ang pin, o i-press ang "Akong location".');
+}
+function closeMap() {
+  $('mapModal').classList.remove('on');
+  document.body.style.overflow = '';
+}
+$('mapX').onclick = closeMap;
+$('mapModal').addEventListener('click', e => { if (e.target === $('mapModal')) closeMap(); });
+$('mapClear').onclick = () => {
+  pickPos = null; pickCleared = true;
+  if (pickMap) drawPick();
+  mapNote('Natangtang ang pin. I-press ang Save pin aron i-confirm.');
+};
+$('mapSave').onclick = () => {
+  if (!pickPos && !pickCleared) { mapNote('I-tap una ang mapa aron ibutang ang pin.', true); return; }
+  const cb = pickCb, p = pickPos;
+  closeMap();
+  if (cb) cb(p);
+};
+$('mapGps').onclick = () => {
+  const b = $('mapGps');
+  if (!navigator.geolocation) { mapNote('Dili suportado sa browser ang location. I-tap lang ang mapa.', true); return; }
+  b.disabled = true;
+  mapNote('Gipangita ang imong location…');
+  navigator.geolocation.getCurrentPosition(
+    p => { b.disabled = false; placePick({ lat: p.coords.latitude, lng: p.coords.longitude }, 18); },
+    () => { b.disabled = false; mapNote('Dili makuha ang location. I-allow ang location permission, o i-tap lang ang mapa.', true); },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+  );
+};
+
+// pin on the order form
+let formPin = null;
+function updatePinUi() {
+  $('locBtn').classList.toggle('on', !!formPin);
+  $('pinInfo').textContent = formPin ? 'Naka-pin na ang imong location. Ikaw ra ug ang admin ang makakita.' : '';
+}
+$('locBtn').onclick = () => openMap(formPin, p => { formPin = p; updatePinUi(); });
+
+/* ---------- customer: own orders + edit ---------- */
+const mineOrders = () => data.orders.filter(o => o.cid && o.cid === myCid);
+function renderMine() {
+  const rows = mineOrders();
+  $('minePanel').classList.toggle('hide', !rows.length);
+  $('mineRows').innerHTML = rows.map(o =>
+    '<div class="item"><span class="n">' + esc(o.name) + meta(o, hasPin(o) ? 'naay pin' : '') + '</span>' +
+    '<span class="k">' + kg(o.kilo) + ' kg</span>' +
+    (o.delivered
+      ? '<span class="tag">Na-deliver na</span>'
+      : '<button type="button" class="ghost sm" data-edit="' + esc(o.id) + '">Edit</button>') +
+    '</div>').join('');
+}
+$('mineRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-edit]');
+  if (b) openEdit(b.dataset.edit);
+});
+let editId = null, editPin = null;
+function updateEditPinUi() {
+  $('ePin').innerHTML = PIN_SVG + '<span>' + (editPin ? 'Usbon ang pin sa location' : 'I-pin ang location') + '</span>';
+  $('ePinInfo').textContent = editPin ? 'Naay pin na. Ikaw ra ug ang admin ang makakita.' : 'Wala pay pin.';
+}
+function openEdit(id) {
+  const o = data.orders.find(x => x.id === id);
+  if (!o || !o.cid || o.cid !== myCid) return;
+  if (o.delivered) { alert('Na-deliver na ang order, dili na ma-edit.'); return; }
+  editId = id;
+  editPin = hasPin(o) ? { lat: o.lat, lng: o.lng } : null;
+  $('eKilo').value = o.kilo;
+  $('eName').value = o.name || '';
+  $('eNote').value = o.note || '';
+  const names = partNames().slice();
+  if (o.part && !names.includes(o.part)) names.unshift(o.part);
+  $('ePart').innerHTML = names.map(n => '<option value="' + esc(n) + '">' + esc(n) + '</option>').join('');
+  $('ePart').value = o.part || names[0];
+  $('eMsg').textContent = ''; $('eMsg').className = 'msg';
+  updateEditPinUi();
+  $('editModal').classList.add('on');
+}
+function closeEdit() { $('editModal').classList.remove('on'); editId = null; }
+$('ePin').onclick = () => openMap(editPin, p => { editPin = p; updateEditPinUi(); });
+$('eCancel').onclick = closeEdit;
+$('eSave').onclick = async () => {
+  const msg = $('eMsg'), btn = $('eSave');
+  const k = parseFloat($('eKilo').value.replace(',', '.')), name = $('eName').value.trim(), part = $('ePart').value, note = $('eNote').value.trim().slice(0, 80);
+  msg.className = 'msg err';
+  if (!(k > 0)) { msg.textContent = 'Ibutang kung pila ka kilo.'; return; }
+  if (!name) { msg.textContent = 'Ibutang ang imong ngalan.'; return; }
+  if (!part) { msg.textContent = 'Asa nga parte sa baboy.'; return; }
+  const id = editId, pin = editPin;
+  btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Gi-save…';
+  try {
+    await mutate(() => {
+      const o = data.orders.find(x => x.id === id);
+      if (!o || !o.cid || o.cid !== myCid) throw new Error('Dili nimo kini order.');
+      if (o.delivered) throw new Error('Na-deliver na ang order, dili na ma-edit.');
+      Object.assign(o, { name, part, note, kilo: k, edited: Date.now() });
+      if (pin) { o.lat = pin.lat; o.lng = pin.lng; } else { delete o.lat; delete o.lng; }
+    });
+    closeEdit();
+    renderAll();
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = 'Wala na-save. ' + e.message;
+  }
+  btn.disabled = false;
+};
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('mapModal').classList.contains('on')) closeMap();
+  else if ($('editModal').classList.contains('on')) closeEdit();
+});
+
+/* ---------- admin: map of all pinned customers ---------- */
+let adminMap = null, adminLayer = null, adminGeo = '', adminFull = '', adminMarkers = {};
+function renderAdminMap() {
+  if (!adminOn()) return;
+  const el = $('adminMap'), info = $('adminMapInfo');
+  if (!hasLeaflet()) { el.classList.add('hide'); info.textContent = 'Wala ma-load ang mapa. Check ang internet ug i-refresh.'; return; }
+  if (!adminMap) {
+    adminMap = L.map('adminMap').setView(MAP_HOME, 13);
+    L.tileLayer(TILES, TILE_OPT).addTo(adminMap);
+    adminLayer = L.layerGroup().addTo(adminMap);
+  }
+  adminMap.invalidateSize();
+  const list = data.orders.filter(hasPin);
+  info.textContent = list.length ? list.length + ' ka customer ang naka-pin. I-tap ang pin para sa detalye ug direksyon.' : 'Wala pay customer nga nag-pin.';
+  const full = JSON.stringify(list.map(o => [o.id, o.lat, o.lng, o.name, o.part, o.kilo, o.note, !!o.delivered]));
+  if (full === adminFull) return; // nothing changed, so keep the map where the admin left it
+  adminFull = full;
+  adminLayer.clearLayers();
+  adminMarkers = {};
+  list.forEach(o => {
+    const m = L.marker([o.lat, o.lng], { icon: pinIcon(o.delivered ? '#6b7d70' : '#c62828') });
+    m.bindTooltip(esc(o.name), { permanent: true, direction: 'top', className: 'pintip' });
+    m.bindPopup('<div class="pop"><b>' + esc(o.name) + '</b>' + esc(o.part || '') + ' · ' + kg(o.kilo) + ' kg' +
+      (o.note ? '<br>' + esc(o.note) : '') + (o.delivered ? '<br>Na-deliver na' : '') +
+      '<br><a href="' + gmapsDir(o.lat, o.lng) + '" target="_blank" rel="noopener">Direksyon sa Google Maps</a></div>');
+    m.addTo(adminLayer);
+    adminMarkers[o.id] = m;
+  });
+  const geo = JSON.stringify(list.map(o => [o.id, o.lat, o.lng]));
+  if (geo === adminGeo) return; // only names/status changed: no need to re-zoom
+  adminGeo = geo;
+  if (!list.length) adminMap.setView(MAP_HOME, 13);
+  else if (list.length === 1) adminMap.setView([list[0].lat, list[0].lng], 16);
+  else adminMap.fitBounds(L.latLngBounds(list.map(o => [o.lat, o.lng])), { padding: [40, 40], maxZoom: 17 });
+}
+$('adminRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-loc]');
+  if (!b || !adminMap) return;
+  const o = data.orders.find(x => x.id === b.dataset.loc);
+  if (!hasPin(o)) return;
+  $('adminMap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  adminMap.setView([o.lat, o.lng], 18);
+  const m = adminMarkers[o.id];
+  if (m) m.openPopup();
+});
+
 /* ---------- boot ---------- */
-function renderAll() { renderHero(); renderSign(); renderPublic(); renderAdmin(); renderChat(); renderBanner(); }
+function renderAll() { renderHero(); renderSign(); renderPublic(); renderMine(); renderAdmin(); renderChat(); renderBanner(); }
 async function refresh() {
   try { await load(); $('status').textContent = ''; }
   catch (e) { $('status').textContent = 'Dili ma-konek sa cloud. ' + e.message; }
