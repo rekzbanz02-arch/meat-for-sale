@@ -87,8 +87,9 @@ textarea{resize:vertical}
 .cbtn{position:absolute;right:0;top:0;height:100%;width:38px;padding:0;background:transparent;color:var(--ink);border:0;border-left:2px solid var(--ink);border-radius:0 5px 5px 0}
 .cbtn:hover{background:var(--kraft)}
 .clist{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border:2px solid var(--ink);border-radius:5px;max-height:220px;overflow:auto}
-.clist button{display:block;width:100%;text-align:left;background:#fff;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:11px 12px;font-weight:500}
+.clist button{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;padding:11px 12px;font-weight:500}
 .clist button:last-child{border-bottom:0}
+.clist .pr{font-weight:700;color:var(--meat-d);white-space:nowrap}
 .clist button:hover{background:var(--kraft)}
 .sub{font-size:15px;font-weight:700;margin:18px 0 2px}
 button{font:inherit;font-weight:700;cursor:pointer;border:2px solid var(--ink);border-radius:5px;padding:10px 14px;background:var(--meat);color:#fff}
@@ -211,6 +212,7 @@ input[type=color]{height:42px;padding:3px;cursor:pointer}
       <input id="priceIn" type="number" inputmode="decimal" min="1" step="any">
       <label for="partsIn">Mga parte sa baboy (usa kada linya)</label>
       <textarea id="partsIn" rows="6"></textarea>
+      <p class="hint">Pananglitan: <b>Pata 230</b>. Ang numero sa katapusan mao ang presyo kada kilo sa maong parte. Kung walay numero, gamiton ang "Presyo kada kilo" sa ibabaw.</p>
       <label for="img1">Header images (hangtod 5 ka Google Drive link)</label>
       <input id="img1" class="imgIn" type="url" placeholder="Image 1: https://drive.google.com/file/d/…/view" style="margin-top:0">
       <input id="img2" class="imgIn" type="url" placeholder="Image 2" aria-label="Image 2">
@@ -329,6 +331,22 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const peso = n => 'P' + Number(n).toLocaleString('en-PH', { maximumFractionDigits: 2 });
 const price = () => Number(data.settings.price) > 0 ? Number(data.settings.price) : DEFAULT_PRICE;
+// each line in "Mga parte sa baboy" can end with its own price per kilo, e.g. "Pata 230"
+function parsePart(line) {
+  const m = String(line || '').trim().match(/^(.*?)[\s:=\-]*(?:P|\u20b1)?\s*(\d+(?:[.,]\d+)?)\s*(?:\/\s*kg|pesos)?\s*$/i);
+  if (m && m[1].trim()) {
+    const p = parseFloat(m[2].replace(',', '.'));
+    if (p > 0) return { name: m[1].trim(), price: p };
+  }
+  return { name: String(line || '').trim(), price: 0 };
+}
+const partNames = () => data.settings.parts.map(l => parsePart(l).name);
+// price per kilo for one part; no price written (or part not in the list) = the default price in settings
+function partPrice(name) {
+  const key = String(name || '').trim().toLowerCase();
+  const hit = data.settings.parts.map(parsePart).find(p => p.name.toLowerCase() === key);
+  return hit && hit.price > 0 ? hit.price : price();
+}
 const kg = n => Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
 
 /* ---------- cloud (jsonbin.io) ---------- */
@@ -573,19 +591,21 @@ function fillSettings() {
 }
 function partSummary(rows) {
   const m = {};
-  rows.forEach(o => { const k = o.part || 'Walay parte'; m[k] = (m[k] || 0) + Number(o.kilo || 0); });
+  const amt = {};
+  rows.forEach(o => { const k = o.part || 'Walay parte'; m[k] = (m[k] || 0) + Number(o.kilo || 0); amt[k] = (amt[k] || 0) + Number(o.kilo || 0) * partPrice(o.part); });
   return '<h3 class="sub">Kilo kada parte</h3>' + Object.keys(m).map(k =>
-    '<div class="item"><span class="n">' + esc(k) + '</span><span class="k">' + kg(m[k]) + ' kg</span></div>').join('');
+    '<div class="item"><span class="n">' + esc(k) + '</span><span class="k">' + kg(m[k]) + ' kg</span><span class="k">' + peso(amt[k]) + '</span></div>').join('');
 }
 function renderAdmin() {
   const rows = data.orders;
   const total = rows.reduce((a, o) => a + Number(o.kilo || 0), 0);
+  const totalAmt = rows.reduce((a, o) => a + Number(o.kilo || 0) * partPrice(o.part), 0);
   $('adminRows').innerHTML = rows.length
-    ? rows.map(o => '<div class="item"><span class="n">' + esc(o.name) + meta(o, peso(o.kilo * price())) + '</span>' +
+    ? rows.map(o => '<div class="item"><span class="n">' + esc(o.name) + meta(o, peso(o.kilo * partPrice(o.part))) + '</span>' +
         '<span class="k">' + kg(o.kilo) + ' kg</span>' +
         '<label class="chk"><input type="checkbox" data-id="' + esc(o.id) + '"' + (o.delivered ? ' checked' : '') + '> Delivery</label>' +
         '<button class="danger" data-del="' + esc(o.id) + '" aria-label="Papasa ' + esc(o.name) + '">✕</button></div>').join('') +
-      '<div class="sum"><span>Total: ' + kg(total) + ' kg</span><span>' + peso(total * price()) + '</span></div>' + partSummary(rows)
+      '<div class="sum"><span>Total: ' + kg(total) + ' kg</span><span>' + peso(totalAmt) + '</span></div>' + partSummary(rows)
     : '<p class="empty">Wala pay nag-order.</p>';
 }
 async function saveSettings() {
@@ -654,13 +674,16 @@ function setupCombo(input, getOptions) {
   const close = () => list.classList.add('hide');
   btn.onclick = () => {
     if (!list.classList.contains('hide')) return close();
-    list.innerHTML = getOptions().map(o => '<button type="button">' + esc(o) + '</button>').join('');
+    list.innerHTML = getOptions().map(o => {
+      const v = typeof o === 'object' ? o.v : o, x = typeof o === 'object' ? o.x : '';
+      return '<button type="button" data-v="' + esc(v) + '"><span>' + esc(v) + '</span>' + (x ? '<span class="pr">' + esc(x) + '</span>' : '') + '</button>';
+    }).join('');
     list.classList.remove('hide');
   };
   list.onclick = e => {
     const b = e.target.closest('button');
     if (!b) return;
-    input.value = b.textContent;
+    input.value = b.dataset.v;
     close();
   };
   input.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
@@ -668,7 +691,7 @@ function setupCombo(input, getOptions) {
   document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(); });
 }
 setupCombo($('kiloIn'), () => ['1', '2', '3', '4', '5']);
-setupCombo($('partIn'), () => data.settings.parts);
+setupCombo($('partIn'), () => data.settings.parts.map(parsePart).map(p => ({ v: p.name, x: p.price > 0 ? peso(p.price) : '' })));
 
 /* ---------- group chat (stored in the same jsonbin as the orders) ---------- */
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
