@@ -116,7 +116,7 @@ button.danger{background:transparent;color:var(--err);border-color:transparent;p
 .topbar{display:flex;justify-content:space-between;align-items:center;margin:20px 0 14px}
 .topbar h1{font:700 24px/1.3 "Poppins",system-ui,sans-serif;margin:0}
 .stack>.panel+.panel{margin-top:18px}
-footer{background:var(--ink);color:var(--kraft);padding:16px 80px 16px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:15px}
+footer{background:var(--ink);color:var(--kraft);padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:15px}
 footer b{letter-spacing:.3px}
 footer a{color:var(--kraft);cursor:pointer;text-decoration:underline;padding:6px}
 .modal{position:fixed;inset:0;background:rgba(28,43,33,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
@@ -216,15 +216,17 @@ details.acc>summary:focus-visible{outline:3px solid var(--meat);outline-offset:-
 footer{position:relative}
 .ownwrap{position:relative}
 .ownbar{display:flex;justify-content:flex-end;margin:-10px 0 8px;position:relative;z-index:3}
-footer{justify-content:flex-end}
+footer{justify-content:center}
 button.ownbtn{background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:16px;padding:3px 12px;font-size:13px;font-weight:700;letter-spacing:.2px;box-shadow:0 2px 0 var(--meat-d)}
 button.ownbtn:hover{background:var(--kraft)}
 .ownmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:6;width:min(300px,calc(100vw - 32px));background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:6px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.35)}
-.ownrow,footer .ownmenu a.ownrow{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-bottom:1px dashed var(--line);border-radius:0;padding:10px 12px;font-weight:600;text-decoration:none;font-size:15px;line-height:1.3}
+.ownrow,footer .ownmenu a.ownrow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-bottom:1px dashed var(--line);border-radius:0;padding:10px 12px;font-weight:600;text-decoration:none;font-size:15px;line-height:1.3}
 .ownrow:last-child{border-bottom:0}
 .ownrow:hover,footer .ownmenu a.ownrow:hover{background:var(--kraft)}
 .ownrow small{display:block;font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
 .ownrow span{overflow-wrap:anywhere}
+.ownrow .owtx{flex:1;min-width:0}
+.ownrow .oarr{flex:0 0 auto;width:11px;height:11px;color:var(--muted)}
 .ownmenu .empty{padding:10px 12px;margin:0}
 #viewMap{height:min(58vh,440px);width:100%}
 .btnlink{flex:1;display:block;text-align:center;font-weight:700;padding:9px 6px;font-size:14px;border:2px solid var(--ink);border-radius:5px;background:var(--meat);color:#fff;text-decoration:none}
@@ -1407,12 +1409,13 @@ function readOwnerForm() {
     lng: ownPin ? ownPin.lng : null
   };
 }
+const ARROW_L = '<svg class="oarr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
 function renderOwner() {
   const ow = ownerCfg(), rows = [];
-  if (ow.name || ow.info) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="info"><small>Tag-iya (Click)</small><span>' + esc(ow.name || 'Info sa tag-iya') + '</span></button>');
-  if (hasPin(ow)) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="map"><small>Location (Click)</small><span>' + esc(ow.locLabel || 'Tan-awa sa mapa') + '</span></button>');
-  else if (ow.locLabel) rows.push('<div class="ownrow"><small>Location</small><span>' + esc(ow.locLabel) + '</span></div>');
-  if (String(ow.phone).replace(/\D/g, '')) rows.push('<a class="ownrow" role="menuitem" href="' + esc(telHref(ow.phone)) + '"><small>Mobile (Click)</small><span>' + esc(ow.phone) + '</span></a>');
+  if (ow.name || ow.info) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="info"><span class="owtx"><small>Tag-iya</small><span>' + esc(ow.name || 'Info sa tag-iya') + '</span></span>' + ARROW_L + '</button>');
+  if (hasPin(ow)) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="map"><span class="owtx"><small>Location</small><span>' + esc(ow.locLabel || 'Tan-awa sa mapa') + '</span></span>' + ARROW_L + '</button>');
+  else if (ow.locLabel) rows.push('<div class="ownrow"><span class="owtx"><small>Location</small><span>' + esc(ow.locLabel) + '</span></span></div>');
+  if (String(ow.phone).replace(/\D/g, '')) rows.push('<a class="ownrow" role="menuitem" href="' + esc(telHref(ow.phone)) + '"><span class="owtx"><small>Mobile</small><span>' + esc(ow.phone) + '</span></span>' + ARROW_L + '</a>');
   $('ownMenu').innerHTML = rows.length ? rows.join('') : '<p class="empty">Wala pay contact info.</p>';
 }
 function toggleOwnMenu(on) {
