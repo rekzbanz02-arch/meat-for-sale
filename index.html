@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Karne for sale</title>
 <meta name="theme-color" content="#1f7a3d">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="description" content="...">
 <!-- Link preview (Facebook, Messenger, Viber, etc.). Put your pig photo in the repo as pig.jpg (1200x630),
      then replace YOUR-USERNAME and YOUR-REPO in the two image lines below. -->
@@ -115,6 +116,9 @@ button.danger{background:transparent;color:var(--err);border-color:transparent;p
 .hint{font-size:14px;color:var(--muted);margin:4px 0 0}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin:20px 0 14px}
 .topbar h1{font:700 24px/1.3 "Poppins",system-ui,sans-serif;margin:0}
+.tbtns{display:flex;gap:8px}
+#setMsg{margin:-6px 0 12px}
+#setMsg:empty{display:none}
 .stack>.panel+.panel{margin-top:18px}
 footer{background:var(--ink);color:var(--kraft);padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:15px}
 footer b{letter-spacing:.3px}
@@ -265,7 +269,7 @@ button.ownbtn:hover{background:var(--kraft)}
           </div>
         </div>
         <div>
-          <label for="partIn">Parte sa baboy</label>
+          <label for="partIn">Parte sa baboy/Presyo</label>
           <div class="combo">
             <input id="partIn" type="text" autocomplete="off" maxlength="40" placeholder="Asa nga parte">
             <button type="button" class="cbtn" aria-label="Ipakita ang lista sa parte">▾</button>
@@ -280,7 +284,7 @@ button.ownbtn:hover{background:var(--kraft)}
         </div>
         <div>
           <label for="noteIn">Address/Contact/Notes</label>
-          <input id="noteIn" type="text" maxlength="80" placeholder="Address ug note" autocomplete="off">
+          <input id="noteIn" type="text" maxlength="80" placeholder="Address, contact, note" autocomplete="off">
         </div>
       </div>
       <div class="orderRow">
@@ -309,7 +313,8 @@ button.ownbtn:hover{background:var(--kraft)}
 
 <div id="pageAdmin" class="hide">
   <main class="stack">
-    <div class="topbar"><h1>Admin</h1><button class="ghost" id="backBtn">Back</button></div>
+    <div class="topbar"><h1>Admin</h1><div class="tbtns"><button id="saveSet">Save</button><button class="ghost" id="backBtn">Back</button></div></div>
+    <p class="msg" id="setMsg" role="status"></p>
 
     <div class="panel">
       <h2>Mga nag-order</h2>
@@ -342,7 +347,7 @@ button.ownbtn:hover{background:var(--kraft)}
       <label for="priceIn">Presyo kada kilo (P)</label>
       <input id="priceIn" type="number" inputmode="decimal" min="1" step="any">
       </div></details>
-      <details class="acc"><summary>Mga parte sa baboy</summary><div class="accbody">
+      <details class="acc"><summary>Mga parte sa baboy ug presyo</summary><div class="accbody">
       <label for="partsIn">Mga parte sa baboy (usa kada linya)</label>
       <textarea id="partsIn" rows="6"></textarea>
       <p class="hint">Pananglitan: <b>Pata 230</b>. Ang numero sa katapusan mao ang presyo kada kilo sa maong parte. Kung walay numero, gamiton ang "Presyo kada kilo" sa ibabaw.</p>
@@ -360,7 +365,7 @@ button.ownbtn:hover{background:var(--kraft)}
       <details class="acc"><summary>Banner sa ubos (update)</summary><div class="accbody">
       <div class="bnbox" id="bnBox">
         <label class="switch"><input type="checkbox" id="bnOn"> Ipakita ang banner sa ubos</label>
-        <label for="bnText">Mga balita</label>
+        <label for="bnText">Mga update</label>
         <textarea id="bnText" rows="3" maxlength="400" placeholder="Pananglitan: Pwede na mag-pickup sa 4PM. Gcash o cash ra."></textarea>
         <p class="hint">Usa ka balita kada linya. Mo-scroll gikan sa tuo padulong sa wala. Mo-undang kung i-hold ang banner.</p>
         <div class="row2" style="--c:1fr 1fr">
@@ -402,7 +407,7 @@ button.ownbtn:hover{background:var(--kraft)}
       <label class="switch"><input type="checkbox" id="chatOn"> Ipakita ang group chat sa main page</label>
       <button type="button" class="ghost full" id="clearChat">I-clear ang chat</button>
       </div></details>
-      <details class="acc"><summary>Contact sa tag-iya (footer)</summary><div class="accbody">
+      <details class="acc"><summary>Contact sa tag-iya</summary><div class="accbody">
         <label for="owName">Ngalan sa tag-iya</label>
         <input id="owName" type="text" maxlength="60" autocomplete="off">
         <label for="owInfo">Info sa tag-iya</label>
@@ -415,8 +420,6 @@ button.ownbtn:hover{background:var(--kraft)}
         <p class="hint" id="owPinInfo"></p>
         <p class="hint">Kining impormasyon makita sa tanang bisita pinaagi sa "Contact owner" sa ubos.</p>
       </div></details>
-      <button class="full" id="saveSet">Save</button>
-      <p class="msg" id="setMsg" role="status"></p>
     </div>
   </main>
 </div>
@@ -733,7 +736,7 @@ document.addEventListener('keydown', e => {
 function renderSign() {
   const t = (data.settings.signText || DEFAULT_SIGN).replace(/\{price\}/g, price());
   $('signTitle').textContent = t;
-  document.title = t;
+  document.title = 'Karne for sale';
 }
 
 /* ---------- main page ---------- */
@@ -857,9 +860,9 @@ async function saveSettings() {
   const openSec = id => { const d = $(id).closest('details'); if (d) d.open = true; };
   if (!(newPrice > 0)) { openSec('priceIn'); msg.className = 'msg err'; msg.textContent = 'Ibutang ang saktong presyo.'; return; }
   const banner = readBannerForm();
-  if (banner.on && !banner.text.trim()) { openSec('bnText'); msg.className = 'msg err'; msg.textContent = 'Isulat una ang balita para sa banner.'; $('bnText').focus(); return; }
+  if (banner.on && !banner.text.trim()) { openSec('bnText'); msg.className = 'msg err'; msg.textContent = 'Isulat una ang balita para sa banner.'; $('bnText').focus({ preventScroll: true }); return; }
   const owner = readOwnerForm();
-  if (owner.phone && owner.phone.replace(/\D/g, '').length < 7) { openSec('owPhone'); msg.className = 'msg err'; msg.textContent = 'Saktoha ang mobile number.'; $('owPhone').focus(); return; }
+  if (owner.phone && owner.phone.replace(/\D/g, '').length < 7) { openSec('owPhone'); msg.className = 'msg err'; msg.textContent = 'Saktoha ang mobile number.'; $('owPhone').focus({ preventScroll: true }); return; }
   btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Gi-save…';
   try {
     await mutate(() => { Object.assign(data.settings, { signText, price: newPrice, imageUrls, imageUrl: '', showList, chatOn, parts, banner, owner }); });
@@ -1105,8 +1108,11 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { bn
 
 /* ---------- map pins (Leaflet + OpenStreetMap) ---------- */
 const MAP_HOME = [8.8167, 124.7667]; // Lagonglong, Misamis Oriental
-const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const TILE_OPT = { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' };
+// Street map tiles: CARTO "Voyager" (OpenStreetMap data). tile.openstreetmap.org was replaced because it answers
+// "Access blocked - tile usage policy" (HTTP 403) whenever the page sends no Referer, e.g. opened as a local file
+// or from a browser/webview that hides referrers; that blocked-tile picture is what showed on the customers' map.
+const TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const TILE_OPT = { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' };
 const PIN_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
 const hasLeaflet = () => typeof L !== 'undefined';
 const hasPin = o => !!o && typeof o.lat === 'number' && typeof o.lng === 'number' && isFinite(o.lat) && isFinite(o.lng);
@@ -1129,7 +1135,7 @@ function addBases(map) {
     L.tileLayer(EARTH, { maxZoom: 19, maxNativeZoom: 18, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }),
     L.tileLayer(EARTH_LABELS, { maxZoom: 19, maxNativeZoom: 18 })
   ]);
-  (lsGet('ihawon_map_base') === 'earth' ? earth : street).addTo(map);
+  (lsGet('ihawon_map_base') === 'street' ? street : earth).addTo(map); // first use = Earth view; afterwards the last view used
   L.control.layers({ 'Mapa': street, 'Earth view': earth }, null, { position: 'topright' }).addTo(map);
   map.on('baselayerchange', e => lsSet('ihawon_map_base', e.name === 'Earth view' ? 'earth' : 'street'));
 }
@@ -1389,7 +1395,7 @@ document.querySelectorAll('details.acc').forEach(d => d.addEventListener('toggle
   if (d.open) document.querySelectorAll('details.acc').forEach(o => { if (o !== d) o.open = false; });
 }));
 
-/* ---------- owner contact (footer "Contact owner") ---------- */
+/* ---------- owner contact "Contact owner" ---------- */
 const OWNER_DEF = { name: '', info: '', phone: '', locLabel: '', lat: null, lng: null };
 const ownerCfg = () => Object.assign({}, OWNER_DEF, data.settings.owner && typeof data.settings.owner === 'object' ? data.settings.owner : {});
 const telHref = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
@@ -1409,13 +1415,13 @@ function readOwnerForm() {
     lng: ownPin ? ownPin.lng : null
   };
 }
-const ARROW_L = '<svg class="oarr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+const ARROW_L = '<svg class="oarr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
 function renderOwner() {
   const ow = ownerCfg(), rows = [];
   if (ow.name || ow.info) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="info"><span class="owtx"><small>Tag-iya</small><span>' + esc(ow.name || 'Info sa tag-iya') + '</span></span>' + ARROW_L + '</button>');
-  if (hasPin(ow)) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="map"><span class="owtx"><small>Location</small><span>' + esc(ow.locLabel || 'Tan-awa sa mapa') + '</span></span>' + ARROW_L + '</button>');
+  if (hasPin(ow)) rows.push('<button type="button" class="ownrow" role="menuitem" data-act="map"><span class="owtx"><small>Location (Map) </small><span>' + esc(ow.locLabel || 'Tan-awa sa mapa') + '</span></span>' + ARROW_L + '</button>');
   else if (ow.locLabel) rows.push('<div class="ownrow"><span class="owtx"><small>Location</small><span>' + esc(ow.locLabel) + '</span></span></div>');
-  if (String(ow.phone).replace(/\D/g, '')) rows.push('<a class="ownrow" role="menuitem" href="' + esc(telHref(ow.phone)) + '"><span class="owtx"><small>Mobile</small><span>' + esc(ow.phone) + '</span></span>' + ARROW_L + '</a>');
+  if (String(ow.phone).replace(/\D/g, '')) rows.push('<a class="ownrow" role="menuitem" href="' + esc(telHref(ow.phone)) + '"><span class="owtx"><small>Contact/Gcash</small><span>' + esc(ow.phone) + '</span></span>' + ARROW_L + '</a>');
   $('ownMenu').innerHTML = rows.length ? rows.join('') : '<p class="empty">Wala pay contact info.</p>';
 }
 function toggleOwnMenu(on) {
